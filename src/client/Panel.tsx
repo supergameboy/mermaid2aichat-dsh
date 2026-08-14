@@ -63,9 +63,11 @@ export interface MermaidPanelProps {
   useBlocks: <S>(sel: (blocks: readonly MermaidBlockView[]) => S, eq?: (a: S, b: S) => boolean) => S
   /** 把 Mermaid 代码发送到指定会话（apply 注入）。 */
   sendToChat: (code: string, sessionId: string) => Promise<void>
+  /** 手动重扫对话代码块（面板挂载时触发，兜底会话绑定时序）。 */
+  rescanBlocks: () => void
 }
 
-export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlocks, sendToChat }: MermaidPanelProps) {
+export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlocks, sendToChat, rescanBlocks }: MermaidPanelProps) {
   const open = useMermaid((s) => s.open)
   const maximized = useMermaid((s) => s.maximized)
   const darkMode = useMermaid((s) => s.darkMode)
@@ -80,6 +82,14 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
   const [pendingSwitch, setPendingSwitch] = useState<DiagramType | null>(null)
   const [sending, setSending] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+
+  // 挂载时重扫：应用 UI 稳定后会话 binding 必然可用（补 boot 时序竞态），
+  // 让启动前已有的 mermaid_load 调用（仍在消息窗口内）也能被导入。
+  useEffect(() => {
+    rescanBlocks()
+    const delayed = setTimeout(rescanBlocks, 2000)
+    return () => { clearTimeout(delayed) }
+  }, [rescanBlocks])
 
   // 当前会话的标签集合（未物化时用占位）
   const sessionViews: MermaidSessionViews = sessionId !== undefined && sessions[sessionId] !== undefined
@@ -117,6 +127,8 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
       toolImported += 1
     }
     if (toolImported > 0) {
+      // 工具导入自动打开面板：AI 送图时直接展示新标签
+      mermaidActions.setOpen(true)
       showToast(`AI 已通过工具导入 ${toolImported} 段 Mermaid 代码`, 'success')
     }
     const manualBlocks = fresh.filter((b) => b.fromTool !== true)

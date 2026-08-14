@@ -75,6 +75,10 @@ interface SessionsFace {
     getSnapshot(): SessionListSnapshot
     subscribe(fn: () => void): () => void
   }
+  /** 当前会话 scope 挂载/切换的发布源（binding 可用时机由它通知）。 */
+  currentProvideInfo?: {
+    subscribe(fn: () => void): () => void
+  }
   binding(id: string): SessionBinding | undefined
 }
 
@@ -199,6 +203,8 @@ function sameKeys(a: readonly MermaidBlockView[], b: readonly MermaidBlockView[]
  */
 export function createMermaidBlocksSource(sessions: SessionsFace): {
   source: { getSnapshot(): readonly MermaidBlockView[]; subscribe(fn: () => void): () => void }
+  /** 手动触发重扫（面板挂载时调用：应用 UI 稳定后 binding 必然可用）。 */
+  rescan: () => void
   dispose: () => void
 } {
   let blocks: readonly MermaidBlockView[] = EMPTY
@@ -206,6 +212,7 @@ export function createMermaidBlocksSource(sessions: SessionsFace): {
   let sessionId: string | undefined
   let unsubSession: (() => void) | undefined
   let unsubList: (() => void) | undefined
+  let unsubProvide: (() => void) | undefined
 
   const publishIfChanged = (next: MermaidBlockView[]): void => {
     if (sameKeys(blocks, next)) return
@@ -244,6 +251,11 @@ export function createMermaidBlocksSource(sessions: SessionsFace): {
   }
 
   unsubList = sessions.list.subscribe(rescanAll)
+  // binding 只在会话 scope 挂载后存在：currentProvideInfo 在该时机发布，
+  // 保证 scope 挂载/切换后立刻重扫（list 订阅覆盖摘要变化）。
+  if (sessions.currentProvideInfo !== undefined) {
+    unsubProvide = sessions.currentProvideInfo.subscribe(rescanAll)
+  }
   rescanAll()
 
   return {
@@ -254,8 +266,10 @@ export function createMermaidBlocksSource(sessions: SessionsFace): {
         return () => { listeners.delete(fn) }
       },
     },
+    rescan: rescanAll,
     dispose: () => {
       unsubList?.()
+      unsubProvide?.()
       unsubSession?.()
       listeners.clear()
     },

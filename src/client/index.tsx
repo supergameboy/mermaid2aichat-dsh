@@ -74,6 +74,7 @@ export function apply(ctx: Context): void {
       inject: () => ({
         hooks: { blocks: blocks.source, mermaid: mermaid.source },
         mermaidActions: mermaid.actions,
+        rescanBlocks: blocks.rescan,
         sendToChat: async (code: string, sessionId: string): Promise<void> => {
           // 直接走 SessionFace.prompt（ConversationController.send 的内部路径），
           // 避免 scope 寻址属性代理在 scope fiber 上抛 inject 守卫错误。

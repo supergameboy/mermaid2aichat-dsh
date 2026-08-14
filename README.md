@@ -100,7 +100,7 @@ dsh plugin --profile web add github:<你的账号>/mermaid-dsh-plugin
 
 在对话中对 Agent 说「把 XXX 的流程画成 flowchart 送到编辑器」——
 Agent 调用 `mermaid_load` 工具后，图表会**自动**出现在编辑器的新标签页中，
-无需任何手动导入。
+并且**面板会自动打开**展示它（面板关闭时同样生效），无需任何手动导入。
 
 ## 开发
 
