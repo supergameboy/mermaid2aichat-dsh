@@ -1,17 +1,10 @@
 /**
- * 属性面板 — 按 diagramType 动态显示节点/边属性编辑（v4 修订）
- *
- * v4 修订（决策 12）:
- *   - 选中状态改为联合类型 selectedId: { type: 'node'|'group'|'edge'; id: string } | null
- *   - 移除 selectedGroup prop，由 selectedId.type === 'group' 判断
- *   - 消除 selectedNodeId/selectedGroupId 同时存在的混乱
+ * 属性面板 — 按 diagramType 动态显示节点/边属性编辑
  *
  * 单一职责：根据图表类型显示对应的属性字段
  * - flowchart: 形状选择 + 边样式 + 通用样式
  * - classDiagram: 成员编辑 + 关系类型
  * - erDiagram: 实体编辑 + 属性编辑 + 关系编辑（M4 新组件）
- * - stateDiagram: 状态类型
- * - mindmap/architecture: 通用字段
  * - 数据图表类型: 显示提示信息
  *
  * 注：sequenceDiagram 不使用 PropertyPanel，由 SequenceCanvas 内联渲染
@@ -22,20 +15,11 @@ import type {
   MermaidEdge,
   MermaidNode,
   NodeStyle,
-  ArchitectureGroupInfo,
   GraphMetadata,
   ErClassInfo,
   ErClassApplyInfo,
 } from '@mermaid2aichat/serializer';
 import { EntityEditor, AttributeEditor, RelationshipEditor, ErSubgraphEditor, ClassDefEditor } from './er/index.js';
-import { StatePropertyEditor, StateRelationEditor } from './state/index.js';
-import { MindmapPropertyEditor } from './mindmap/index.js';
-import {
-  ArchitectureServicePanel,
-  ArchitectureJunctionPanel,
-  ArchitectureGroupPanel,
-  ArchitectureEdgePanel,
-} from './architecture/index.js';
 import { ShapeSwitcher, EdgeStyleEditor, SubgraphEditor } from './flowchart/index.js';
 import {
   ClassEditor,
@@ -61,26 +45,14 @@ interface PropertyPanelProps {
   readonly selectedEdge: MermaidEdge | null;
   readonly onUpdateNode: (id: string, data: Partial<MermaidNode['data']>) => void;
   readonly onUpdateEdge: (id: string, data: Partial<MermaidEdge['data']>) => void;
-  /** architecture: 所有节点（供 Group 面板显示成员详情） */
+  /** 所有节点（供 ClassDefEditor、classDiagram 推断、flowchart SubgraphEditor 使用） */
   readonly nodes?: MermaidNode[];
-  /** architecture: 所有 groups（供 Service 面板选择所属 group） */
-  readonly groups?: ArchitectureGroupInfo[];
   /** classDiagram: 所有边（供 NoteEditor 推断关联 class + handleSelectNoteClassId 创建/更新/删除 note-edge） */
   readonly edges?: MermaidEdge[];
   /** classDiagram: 替换整个 edges 数组（handleSelectNoteClassId 用） */
   readonly onUpdateEdges?: (edges: MermaidEdge[]) => void;
-  /** v4：选中状态联合类型（architecture 专用，替代 selectedGroup） */
-  readonly selectedId?: SelectedId;
-  /** architecture: 节点更新回调（完整 MermaidNode 更新，含 parentId 等） */
+  /** 完整节点更新回调（flowchart SubgraphEditor 用：含 parentId 等） */
   readonly onUpdateNodeFull?: (id: string, updates: Partial<MermaidNode>) => void;
-  /** architecture: 边更新回调（完整 MermaidEdge 更新，含 sourceHandle 等） */
-  readonly onUpdateEdgeFull?: (id: string, updates: Partial<MermaidEdge>) => void;
-  /** architecture: 节点删除回调（v4：支持 options.recursive） */
-  readonly onDeleteNode?: (id: string, options?: { recursive?: boolean }) => void;
-  /** architecture: 边删除回调 */
-  readonly onDeleteEdge?: (id: string) => void;
-  /** v4：移动节点到其他 group（targetGroupId 为 null 表示移出 group） */
-  readonly onMoveToGroup?: (nodeId: string, targetGroupId: string | null) => void;
   /** flowchart: 移动节点到 subgraph（subgraphId 为 null 表示移出到顶层） */
   readonly onMoveToSubgraph?: (nodeId: string, subgraphId: string | null) => void;
   /** flowchart: 删除 subgraph 节点 */
@@ -98,26 +70,15 @@ export function PropertyPanel({
   onUpdateNode,
   onUpdateEdge,
   nodes,
-  groups,
   edges,
   onUpdateEdges,
-  selectedId,
   onUpdateNodeFull,
-  onUpdateEdgeFull,
-  onDeleteNode,
-  onDeleteEdge,
-  onMoveToGroup,
   onMoveToSubgraph,
   onDeleteSubgraph,
   metadata,
   onUpdateMetadata,
 }: PropertyPanelProps) {
-  // v4：根据 selectedId 联合类型派生选中对象
-  const selectedGroup = selectedId?.type === 'group'
-    ? groups?.find((g) => g.id === selectedId.id) ?? null
-    : null;
-
-  if (!selectedNode && !selectedEdge && !selectedGroup) {
+  if (!selectedNode && !selectedEdge) {
     // erDiagram: 未选中状态挂载 ClassDefEditor（L2 决策1方案A：全局样式编辑入口）
     // 语义清晰：未选中 = 全局编辑，选中 = 节点/边编辑
     if (diagramType === 'erDiagram' && metadata && onUpdateMetadata) {
@@ -151,22 +112,6 @@ export function PropertyPanel({
     );
   }
 
-  // architecture: 优先处理 group 选中（v4：使用 selectedId 联合类型）
-  if (diagramType === 'architecture' && selectedGroup && onDeleteNode && onMoveToGroup) {
-    return (
-      <div className="property-panel">
-        <ArchitectureGroupPanel
-          group={selectedGroup}
-          nodes={nodes ?? []}
-          groups={groups ?? []}
-          onUpdateNode={onUpdateNode}
-          onDelete={() => onDeleteNode(selectedGroup.id)}
-          onMoveToGroup={onMoveToGroup}
-        />
-      </div>
-    );
-  }
-
   if (selectedNode) {
     return (
       <NodePropertyEditor
@@ -174,11 +119,9 @@ export function PropertyPanel({
         diagramType={diagramType}
         onUpdate={onUpdateNode}
         nodes={nodes}
-        groups={groups}
         edges={edges}
         onUpdateEdges={onUpdateEdges}
         onUpdateNodeFull={onUpdateNodeFull}
-        onDeleteNode={onDeleteNode}
         onMoveToSubgraph={onMoveToSubgraph}
         onDeleteSubgraph={onDeleteSubgraph}
       />
@@ -191,9 +134,6 @@ export function PropertyPanel({
         edge={selectedEdge}
         diagramType={diagramType}
         onUpdate={onUpdateEdge}
-        nodes={nodes}
-        onUpdateEdgeFull={onUpdateEdgeFull}
-        onDeleteEdge={onDeleteEdge}
       />
     );
   }
@@ -207,18 +147,14 @@ interface NodePropertyEditorProps {
   node: MermaidNode;
   diagramType: DiagramType;
   onUpdate: (id: string, data: Partial<MermaidNode['data']>) => void;
-  /** architecture: 所有节点 */
+  /** 所有节点（供 classDiagram 推断与 flowchart SubgraphEditor 使用） */
   nodes?: MermaidNode[];
-  /** architecture: 所有 groups */
-  groups?: ArchitectureGroupInfo[];
   /** classDiagram: 所有边（NoteEditor 推断关联 + handleSelectNoteClassId 创建/更新/删除 note-edge） */
   edges?: MermaidEdge[];
   /** classDiagram: 替换整个 edges 数组（handleSelectNoteClassId 用） */
   onUpdateEdges?: (edges: MermaidEdge[]) => void;
-  /** architecture: 完整节点更新回调 */
+  /** 完整节点更新回调（flowchart SubgraphEditor 用） */
   onUpdateNodeFull?: (id: string, updates: Partial<MermaidNode>) => void;
-  /** architecture: 节点删除回调（v4：支持 options.recursive） */
-  onDeleteNode?: (id: string, options?: { recursive?: boolean }) => void;
   /** flowchart: 移动节点到 subgraph */
   onMoveToSubgraph?: (nodeId: string, subgraphId: string | null) => void;
   /** flowchart: 删除 subgraph 节点 */
@@ -230,42 +166,14 @@ function NodePropertyEditor({
   diagramType,
   onUpdate,
   nodes,
-  groups,
   edges,
   onUpdateEdges,
   onUpdateNodeFull,
-  onDeleteNode,
   onMoveToSubgraph,
   onDeleteSubgraph,
 }: NodePropertyEditorProps) {
   // erDiagram 使用专用 EntityEditor（含实体名+别名），跳过通用文本字段
   const skipGenericLabel = diagramType === 'erDiagram';
-
-  // stateDiagram 使用专用 StatePropertyEditor（含状态类型+描述+样式），完整替代通用编辑
-  if (diagramType === 'stateDiagram') {
-    return (
-      <div className="property-panel">
-        <h3 className="panel-title">状态属性</h3>
-        <StatePropertyEditor
-          stateNode={node}
-          onUpdate={(data) => onUpdate(node.id, data)}
-        />
-      </div>
-    );
-  }
-
-  // mindmap 使用专用 MindmapPropertyEditor（含形状+图标+CSS类+样式），完整替代通用编辑
-  if (diagramType === 'mindmap') {
-    return (
-      <div className="property-panel">
-        <h3 className="panel-title">思维导图节点属性</h3>
-        <MindmapPropertyEditor
-          mindmapNode={node}
-          onUpdate={(data) => onUpdate(node.id, data)}
-        />
-      </div>
-    );
-  }
 
   // classDiagram: 按 node.type 三分发到 ClassEditor+MemberEditor / NoteEditor / NamespaceEditor
   if (diagramType === 'classDiagram') {
@@ -310,32 +218,6 @@ function NodePropertyEditor({
         </div>
       );
     }
-  }
-
-  // architecture: 根据节点类型使用专用面板
-  if (diagramType === 'architecture' && onUpdateNodeFull && onDeleteNode) {
-    const isJunction = node.data.archIsJunction === true;
-    if (isJunction) {
-      return (
-        <div className="property-panel">
-          <ArchitectureJunctionPanel
-            node={node}
-            onDelete={() => onDeleteNode(node.id)}
-          />
-        </div>
-      );
-    }
-    return (
-      <div className="property-panel">
-        <ArchitectureServicePanel
-          node={node}
-          groups={groups ?? []}
-          nodes={nodes}
-          onChange={(updates) => onUpdateNodeFull(node.id, updates)}
-          onDelete={() => onDeleteNode(node.id)}
-        />
-      </div>
-    );
   }
 
   // flowchart: subgraph 节点使用专用 SubgraphEditor
@@ -397,8 +279,6 @@ function NodePropertyEditor({
           />
         )}
 
-        {/* stateDiagram 已在 NodePropertyEditor 入口处由 StatePropertyEditor 完整承载，此处不再处理 */}
-
         {/* classDiagram 已在 NodePropertyEditor 入口处按 node.type 三分发到专用编辑器，此处不再处理 */}
 
         {/* erDiagram: 实体编辑（名称+别名） + 属性编辑 */}
@@ -439,15 +319,9 @@ interface EdgePropertyEditorProps {
   edge: MermaidEdge;
   diagramType: DiagramType;
   onUpdate: (id: string, data: Partial<MermaidEdge['data']>) => void;
-  /** architecture: 所有节点（供 Edge 面板显示源/目标） */
-  nodes?: MermaidNode[];
-  /** architecture: 完整边更新回调（含 sourceHandle 等） */
-  onUpdateEdgeFull?: (id: string, updates: Partial<MermaidEdge>) => void;
-  /** architecture: 边删除回调 */
-  onDeleteEdge?: (id: string) => void;
 }
 
-function EdgePropertyEditor({ edge, diagramType, onUpdate, nodes, onUpdateEdgeFull, onDeleteEdge }: EdgePropertyEditorProps) {
+function EdgePropertyEditor({ edge, diagramType, onUpdate }: EdgePropertyEditorProps) {
   // erDiagram 使用专用 RelationshipEditor（含基数+关系类型+角色），跳过通用标签字段
   const skipGenericLabel = diagramType === 'erDiagram';
 
@@ -459,33 +333,6 @@ function EdgePropertyEditor({ edge, diagramType, onUpdate, nodes, onUpdateEdgeFu
         <RelationEditor
           relation={edge}
           onUpdate={(data) => onUpdate(edge.id, data)}
-        />
-      </div>
-    );
-  }
-
-  // stateDiagram 使用专用 StateRelationEditor（含转换标签 event[guard]/action），完整替代通用编辑
-  if (diagramType === 'stateDiagram') {
-    return (
-      <div className="property-panel">
-        <h3 className="panel-title">转换关系</h3>
-        <StateRelationEditor
-          relationEdge={edge}
-          onUpdate={(data) => onUpdate(edge.id, data)}
-        />
-      </div>
-    );
-  }
-
-  // architecture 使用专用 ArchitectureEdgePanel（含 lhsDir/rhsDir/arrow/title）
-  if (diagramType === 'architecture' && onUpdateEdgeFull && onDeleteEdge) {
-    return (
-      <div className="property-panel">
-        <ArchitectureEdgePanel
-          edge={edge}
-          nodes={nodes ?? []}
-          onChange={(updates) => onUpdateEdgeFull(edge.id, updates)}
-          onDelete={() => onDeleteEdge(edge.id)}
         />
       </div>
     );

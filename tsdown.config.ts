@@ -6,8 +6,7 @@
  * 其余依赖（@xyflow/react、dagre-cluster-fix、序列化器、编辑器源码）全部内联。
  */
 import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { basename, dirname, resolve as resolvePath, sep } from 'node:path'
+import { basename, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'tsdown'
 import { transform } from 'lightningcss'
@@ -33,10 +32,13 @@ const CSS_VIRTUAL_SUFFIX = '.mjs'
 function cssInlinePlugin() {
   return {
     name: 'dsh-css-inline',
-    resolveId(source, importer) {
+    async resolveId(source, importer) {
       if (!source.endsWith('.css')) return null
-      const abs = importer !== undefined ? resolvePath(dirname(importer), source) : source
-      return CSS_VIRTUAL_PREFIX + abs + CSS_VIRTUAL_SUFFIX
+      // 先走 rolldown 常规解析（处理裸模块说明符，如 @xyflow/react/dist/style.css），
+      // 再把解析出的绝对路径包装成虚拟 id，由 load 钩子读取并内联。
+      const resolved = await this.resolve(source, importer, { skipSelf: true })
+      if (resolved === null) return null
+      return CSS_VIRTUAL_PREFIX + resolved.id + CSS_VIRTUAL_SUFFIX
     },
     async load(virtualId) {
       if (!virtualId.startsWith(CSS_VIRTUAL_PREFIX)) return null
@@ -81,6 +83,7 @@ export default defineConfig([
     target: 'es2022',
     dts: false,
     clean: false,
+    fixedExtension: false,
     resolve: {
       alias: {
         '@mermaid2aichat/serializer': resolvePath(ROOT, 'src/serializer/index.ts'),
@@ -96,6 +99,7 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     clean: false,
+    fixedExtension: false,
     external: [...CLIENT_EXTERNALS],
     // 除平台模块外全部内联（@xyflow/react、dagre-cluster-fix、编辑器源码）。
     noExternal: (id) => (CLIENT_EXTERNALS.includes(id) ? undefined : true),

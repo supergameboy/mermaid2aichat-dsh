@@ -2,7 +2,7 @@
  * GraphCanvas — 图结构类型画布（React Flow）
  *
  * 单一职责：管理 React Flow 画布状态，处理用户交互，通过回调通知外部
- * 支持 7 种图结构类型：flowchart/sequenceDiagram/classDiagram/erDiagram/mindmap/stateDiagram/architecture
+ * 支持 3 种图结构类型：flowchart/classDiagram/erDiagram
  *
  * 数据流设计（单向，无循环）：
  * - 服务端同步：syncNodes/syncEdges/syncDirection → useEffect → React Flow state
@@ -39,7 +39,6 @@ import '@xyflow/react/dist/style.css';
 
 import {
   isGraphCanvasState,
-  detectCycle,
   type CanvasState,
   type MermaidShapeType,
   type MermaidNode,
@@ -48,9 +47,6 @@ import {
   type GraphDiagramType,
   type GraphCanvasState,
   type GraphMetadata,
-  type ArchitectureGroupInfo,
-  type ArchitectureLayoutHint,
-  type ArchitectureEdgeInfo,
 } from '@mermaid2aichat/serializer';
 import type { CanvasDispatcherProps } from './canvas.js';
 import type { CanvasProps } from './types.js';
@@ -82,18 +78,11 @@ import { computeErBoxSize } from './nodes/er/er-box-size.js';
 import { Toolbar } from './components/toolbar.js';
 import { NodeLibrary } from './components/node-library.js';
 import { getTemplate, getTemplatesForDiagramType } from './components/node-templates.js';
-import { ConsumedBadge } from './components/consumed-badge.js';
-import { ConnectionStatus } from './components/connection-status.js';
-import { PropertyPanel, type SelectedId } from './components/property-panel.js';
+import { PropertyPanel } from './components/property-panel.js';
 import { ContextMenu } from './components/flowchart/context-menu.js';
 import { InlineEditor } from './components/inline-editor.js';
 import { CodeEditor } from './components/code-editor.js';
-import { MindmapTreePanel, collectDescendantIds } from './components/mindmap/index.js';
-import { ArchitectureTreePanel } from './components/architecture/architecture-tree-panel.js';
-import { ArchitectureLayoutPanel } from './components/architecture/architecture-layout-panel.js';
 import { useSyncedMermaidCode } from './hooks/use-synced-mermaid-code.js';
-// M0: 触发 architecture icon 自动注册到 IconRegistry
-import './components/architecture-icon-registration.js';
 import './styles.css';
 
 // React Flow 内部测量变化类型（非用户操作，不应触发 canvas_edit）
@@ -117,13 +106,8 @@ function GraphCanvasInner(props: GraphCanvasProps) {
     syncMetadata,
     // syncCanvas 由 Canvas 分发器透传，用于读取 rawCode 等完整状态
     syncCanvas,
-    consumed,
-    canvasSource,
-    lastConsumedAt,
-    connectionStatus,
     onCanvasChange,
     onDirectionChange,
-    onResetConsumed,
     onViewportChange,
     onDiagramTypeChange,
     diagramType,
@@ -143,17 +127,13 @@ function GraphCanvasInner(props: GraphCanvasProps) {
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
-  /** v4：architecture 选中状态联合类型（替代 selectedGroupId） */
-  const [archSelectedId, setArchSelectedId] = useState<SelectedId>(null);
-  /** v4：architecture 删除 group 确认对话框状态 */
-  const [deleteGroupConfirm, setDeleteGroupConfirm] = useState<{ groupId: string; groupName: string } | null>(null);
   /** M1：flowchart 右键菜单状态 */
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeIds: string[]; targetNodeId?: string } | null>(null);
 
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const directionRef = useRef(syncDirection);
-  /** architecture: metadata 状态（groups 等） */
+  /** metadata 状态（erDiagram 的 erClasses/erClassApplyClasses 等） */
   const [metadata, setMetadata] = useState<GraphMetadata | undefined>(syncMetadata);
   const metadataRef = useRef(metadata);
   nodesRef.current = nodes;
@@ -247,34 +227,16 @@ function GraphCanvasInner(props: GraphCanvasProps) {
 
 
 
-  // architecture: 同步 metadata（groups 等）
+  // 同步 metadata（erDiagram 的 erClasses/erClassApplyClasses 等）
   useEffect(() => {
     setMetadata(syncMetadata);
   }, [syncMetadata]);
-
-  // mindmap: 从 nodes 的 parentId 派生 edges（用于 React Flow 渲染，不存储在 CanvasState.edges）
-  useEffect(() => {
-    if (diagramType !== 'mindmap') return;
-    const derivedEdges: MermaidEdge[] = nodes
-      .filter((n): n is MermaidNode & { parentId: string } => Boolean(n.parentId))
-      .map((n) => ({
-        id: `mindmap-edge-${n.id}`,
-        source: n.parentId,
-        target: n.id,
-        type: 'smoothstep',
-        data: { edgeStyle: 'line' as const },
-      }));
-    setEdges(derivedEdges);
-  }, [nodes, diagramType, setEdges]);
 
   /**
    * 构造 GraphCanvasState（同步，无 ref 依赖）
    *
    * Stage 7 修订：原 getCanvasSnapshot 从 ref 读取，依赖 setTimeout(0) 等 state 更新。
    * 改为接收 nodes/edges/direction/metadata 参数，调用方同步构造，消除 setTimeout 依赖。
-   *
-   * mindmap 的 edges 从 parentId 派生，不存储在 CanvasState.edges 中（传 []）。
-   * architecture 需要传递 metadata（groups 等）。
    */
   const buildCanvasState = useCallback(
     (
@@ -283,12 +245,10 @@ function GraphCanvasInner(props: GraphCanvasProps) {
       directionParam: FlowchartDirection,
       metadataParam: GraphMetadata | undefined,
     ): GraphCanvasState => {
-      // mindmap 的 edges 从 parentId 派生，不存储在 CanvasState.edges 中
-      const effectiveEdges = diagramType === 'mindmap' ? [] : edgesParam;
       const canvas: GraphCanvasState = {
         diagramType,
         nodes: nodesParam,
-        edges: effectiveEdges,
+        edges: edgesParam,
         direction: directionParam,
         ...(metadataParam !== undefined ? { metadata: metadataParam } : {}),
         needsLayout: false,
@@ -304,7 +264,7 @@ function GraphCanvasInner(props: GraphCanvasProps) {
     /** 新的边数组（如果边也变了；不传则使用 edgesRef.current） */
     edges?: MermaidEdge[];
     /**
-     * 新的 metadata（architecture groups/layoutHints 等）。
+     * 新的 metadata（erDiagram 的 erClasses/erClassApplyClasses 等）。
      * 若本次变更涉及 metadata，必须通过此字段同步传入，避免 setMetadata 异步
      * 导致 metadataRef.current 时序问题。applyCanvasChange 内部会同步更新
      * metadataRef.current + setMetadata + 传入 buildCanvasState。
@@ -520,7 +480,7 @@ function GraphCanvasInner(props: GraphCanvasProps) {
    *
    * 数据流：
    *   React Flow onNodeDragStop(event, node)
-   *     → collectDescendantIds(node.id, nodes) — 排除自身+后代防循环
+   *     → collectSubtreeIds(node.id, nodes) — 排除自身+后代防循环
    *     → getNodeAbsolutePosition(node, nodes) — 被拖拽节点绝对坐标
    *     → findContainerAtPosition(nodes, center, excludeIds) — 找最深容器
    *     → 与原 parentId 比较：
@@ -573,36 +533,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      // v4 修复#7：architecture 模式下创建 archEdge 数据，确保新边可序列化
-      if (diagramType === 'architecture') {
-        const handleIdToDir = (handleId: string | null | undefined): 'L' | 'R' | 'T' | 'B' => {
-          switch (handleId) {
-            case 'left': return 'L';
-            case 'right': return 'R';
-            case 'top': return 'T';
-            case 'bottom': return 'B';
-            default: return 'L';
-          }
-        };
-        const archEdge: ArchitectureEdgeInfo = {
-          lhsId: connection.source,
-          lhsDir: handleIdToDir(connection.sourceHandle),
-          lhsInto: false,
-          rhsId: connection.target,
-          rhsDir: handleIdToDir(connection.targetHandle),
-          rhsInto: true, // 默认有箭头
-        };
-        const newEdge: MermaidEdge = {
-          ...connection,
-          id: idGenerator.generate('edge'),
-          type: connectionMode === 'nearest' ? 'floating' : 'smoothstep',
-          data: { edgeStyle: 'arrow', archEdge },
-        };
-        const newEdges = addEdge(newEdge, edgesRef.current);
-        applyCanvasChange({ nodes: nodesRef.current, edges: newEdges });
-        return;
-      }
-
       // classDiagram 分支（M3 模块4 L2-7）：创建 class-relation 或 note-edge 边
       // 对齐 NoteConverter/RelationConverter 创建的边字段，保证 serialize 往返一致
       if (diagramType === 'classDiagram') {
@@ -684,116 +614,8 @@ function GraphCanvasInner(props: GraphCanvasProps) {
     [connectionMode, diagramType, applyCanvasChange]
   );
 
-  // ============================================================
-  // architecture 节点添加回调（v4 新增）
-  // 注意：必须在 addNodeFromLibrary/onDrop 之前定义，因为它们被引用
-  // ============================================================
-
-  /** v4：architecture 添加 group（可选父 group ID 实现嵌套） */
-  const handleAddGroup = useCallback((parentId?: string) => {
-    const groupId = idGenerator.generate('group');
-    const newNode: MermaidNode = {
-      id: groupId,
-      type: 'arch-group',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-      data: {
-        label: '新分组',
-        shape: 'arch-group',
-      },
-      ...(parentId ? { parentId, extent: 'parent' as const } : {}),
-    };
-    // v4 根因修复：group 属性全部通过 nodes[] 表达
-    //   - title → node.data.label（已在 newNode.data 中设置）
-    //   - in（父 group）→ node.parentId（已在 newNode 中设置）
-    //   - metadata.groups 仅保留 id 和可选 icon（作为 group 索引）
-    // Stage 7：同步构造 newMetadata + 传给 applyCanvasChange（消除 setMetadata 异步时序问题）
-    const newGroup: ArchitectureGroupInfo = { id: groupId };
-    const prevMeta = metadataRef.current;
-    const newMetadata: GraphMetadata = {
-      ...(prevMeta ?? {}),
-      groups: [...(prevMeta?.groups ?? []), newGroup],
-    };
-    const newNodes = [...nodesRef.current, newNode];
-    setArchSelectedId({ type: 'group', id: groupId });
-    applyCanvasChange({ nodes: newNodes, metadata: newMetadata });
-  }, [applyCanvasChange]);
-
-  /** v4：architecture 添加 service（可选所属 group ID） */
-  const handleAddService = useCallback((groupId?: string) => {
-    const newNode: MermaidNode = {
-      id: idGenerator.generate('node'),
-      type: 'arch-service',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-      data: {
-        label: '新服务',
-        shape: 'arch-service',
-        archIcon: 'server',
-      },
-      ...(groupId ? { parentId: groupId, extent: 'parent' as const } : {}),
-    };
-    const newNodes = [...nodesRef.current, newNode];
-    setArchSelectedId({ type: 'node', id: newNode.id });
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
-  /** v4：architecture 添加 junction（可选所属 group ID） */
-  const handleAddJunction = useCallback((groupId?: string) => {
-    const newNode: MermaidNode = {
-      id: idGenerator.generate('node'),
-      type: 'arch-junction',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-      data: {
-        label: '连接点',
-        shape: 'arch-junction',
-        archIsJunction: true,
-      },
-      ...(groupId ? { parentId: groupId, extent: 'parent' as const } : {}),
-    };
-    const newNodes = [...nodesRef.current, newNode];
-    setArchSelectedId({ type: 'node', id: newNode.id });
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
   const addNodeFromLibrary = useCallback(
     (shape: MermaidShapeType) => {
-      // mindmap: 画布为空时创建 root 节点，画布非空时通过树形面板添加子节点
-      if (diagramType === 'mindmap') {
-        if (nodesRef.current.length > 0) {
-          setCodeError('mindmap 已有根节点，请通过树形面板添加子节点');
-          return;
-        }
-        const newNode: MermaidNode = {
-          id: idGenerator.generate('node'),
-          type: 'mindmap-default',
-          position: { x: 100, y: 200 },
-          data: {
-            label: '根节点',
-            shape: 'mindmap-default',
-            mindmapType: 'default',
-            isRoot: true,
-          },
-        };
-        // Stage 7：mindmap 的 edges 由 buildCanvasState 内部从 parentId 派生为 []，
-        // 同步走 applyCanvasChange，无需 setTimeout
-        const newNodes = [...nodesRef.current, newNode];
-        setCodeError(null);
-        applyCanvasChange({ nodes: newNodes });
-        return;
-      }
-
-      // v4 修复#8：architecture 模式下根据 shape 创建对应类型节点
-      if (diagramType === 'architecture') {
-        if (shape === 'arch-group') {
-          handleAddGroup();
-        } else if (shape === 'arch-junction') {
-          handleAddJunction();
-        } else {
-          // arch-service 或其他 shape 统一作为 service
-          handleAddService();
-        }
-        return;
-      }
-
       // 计算 viewport 中心对应的 flow 坐标
       const viewportCenter = getViewportCenterFlowPosition(reactFlow);
       const position = centerNodeAt(shape, DEFAULT_NODE_LABEL, viewportCenter);
@@ -809,7 +631,7 @@ function GraphCanvasInner(props: GraphCanvasProps) {
       };
       applyCanvasChange({ nodes: [...nodesRef.current, newNode], recalculate: { subgraph: true, edges: true } });
     },
-    [diagramType, reactFlow, applyCanvasChange, handleAddGroup, handleAddService, handleAddJunction]
+    [reactFlow, applyCanvasChange]
   );
 
   const onDrop = useCallback(
@@ -817,19 +639,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
       event.preventDefault();
       const shape = event.dataTransfer.getData('application/mermaid-shape') as MermaidShapeType;
       if (!shape) return;
-
-      // v4 修复#8：architecture 模式下委托给专用处理函数
-      // 注意：architecture 节点位置由布局算法决定，不使用拖放位置
-      if (diagramType === 'architecture') {
-        if (shape === 'arch-group') {
-          handleAddGroup();
-        } else if (shape === 'arch-junction') {
-          handleAddJunction();
-        } else {
-          handleAddService();
-        }
-        return;
-      }
 
       const flowPosition = reactFlow.screenToFlowPosition({
         x: event.clientX,
@@ -845,7 +654,7 @@ function GraphCanvasInner(props: GraphCanvasProps) {
       };
       applyCanvasChange({ nodes: [...nodesRef.current, newNode], recalculate: { subgraph: true, edges: true } });
     },
-    [reactFlow, diagramType, applyCanvasChange, handleAddGroup, handleAddService, handleAddJunction]
+    [reactFlow, applyCanvasChange]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -857,41 +666,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
     (event: React.MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.classList.contains('react-flow__pane')) return;
-
-      // mindmap: 画布为空时创建 root 节点，画布非空时通过树形面板添加子节点
-      if (diagramType === 'mindmap') {
-        if (nodesRef.current.length > 0) {
-          setCodeError('mindmap 已有根节点，请通过树形面板添加子节点');
-          return;
-        }
-        const position = reactFlow.screenToFlowPosition({
-          x: event.clientX,
-          y: event.clientY,
-        });
-        const newNode: MermaidNode = {
-          id: idGenerator.generate('node'),
-          type: 'mindmap-default',
-          position,
-          data: {
-            label: '根节点',
-            shape: 'mindmap-default',
-            mindmapType: 'default',
-            isRoot: true,
-          },
-        };
-        // Stage 7：同步走 applyCanvasChange（mindmap edges 由 buildCanvasState 派生为 []）
-        const newNodes = [...nodesRef.current, newNode];
-        setCodeError(null);
-        applyCanvasChange({ nodes: newNodes });
-        return;
-      }
-
-      // v4 修复#8：architecture 模式下不通过双击创建节点
-      // architecture 节点类型有特殊语义（service/junction/group），需通过节点库或树形面板创建
-      if (diagramType === 'architecture') {
-        setCodeError('architecture 请通过左侧节点库或树形面板添加节点');
-        return;
-      }
 
       const flowPosition = reactFlow.screenToFlowPosition({
         x: event.clientX,
@@ -974,26 +748,7 @@ function GraphCanvasInner(props: GraphCanvasProps) {
   const onSelectionChange = useCallback(({ nodes: selNodes, edges: selEdges }: { nodes: Node[]; edges: Edge[] }) => {
     setSelectedNodeId(selNodes.length === 1 ? selNodes[0].id : null);
     setSelectedEdgeId(selEdges.length === 1 ? selEdges[0].id : null);
-
-    // v4：architecture 使用联合类型选中状态
-    if (diagramType === 'architecture') {
-      if (selNodes.length === 1) {
-        const selectedNode = selNodes[0];
-        // 检测是否为 group 节点（arch-group 类型或 shape === 'arch-group'）
-        const isGroup = selectedNode.type === 'arch-group'
-          || selectedNode.data.shape === 'arch-group';
-        if (isGroup) {
-          setArchSelectedId({ type: 'group', id: selectedNode.id });
-        } else {
-          setArchSelectedId({ type: 'node', id: selectedNode.id });
-        }
-      } else if (selEdges.length === 1) {
-        setArchSelectedId({ type: 'edge', id: selEdges[0].id });
-      } else {
-        setArchSelectedId(null);
-      }
-    }
-  }, [diagramType]);
+  }, []);
 
   const onMove = useCallback(
     (_event: unknown, viewport: { x: number; y: number; zoom: number }) => {
@@ -1038,311 +793,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
     applyCanvasChange({ nodes: nodesRef.current, edges: newEdges });
   }, [applyCanvasChange]);
 
-  // ============================================================
-  // mindmap 树形操作（M6 新增）
-  // ============================================================
-
-  /** 添加子节点：在选中节点下创建新子节点 */
-  const handleAddChild = useCallback((parentId: string) => {
-    const parentNode = nodesRef.current.find((n) => n.id === parentId);
-    const parentX = parentNode?.position.x ?? 0;
-    const parentY = parentNode?.position.y ?? 0;
-    const newNode: MermaidNode = {
-      id: idGenerator.generate('node'),
-      type: 'mindmap-default',
-      position: { x: parentX + 200, y: parentY + (Math.random() * 100 - 50) },
-      data: {
-        label: '新节点',
-        shape: 'mindmap-default',
-        mindmapType: 'default',
-      },
-      parentId,
-      extent: 'parent',
-    };
-    // Stage 7：同步走 applyCanvasChange（mindmap edges 由 buildCanvasState 派生为 []）
-    const newNodes = [...nodesRef.current, newNode];
-    setSelectedNodeId(newNode.id);
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
-  /** 添加兄弟节点：在选中节点的父节点下创建新子节点 */
-  const handleAddSibling = useCallback((nodeId: string) => {
-    const currentNode = nodesRef.current.find((n) => n.id === nodeId);
-    if (!currentNode) return;
-    const parentId = currentNode.parentId;
-    if (!parentId) {
-      // 根节点没有兄弟节点（mindmap 只能有一个根）
-      return;
-    }
-    const newNode: MermaidNode = {
-      id: idGenerator.generate('node'),
-      type: 'mindmap-default',
-      position: {
-        x: currentNode.position.x + 50,
-        y: currentNode.position.y + 80,
-      },
-      data: {
-        label: '新节点',
-        shape: 'mindmap-default',
-        mindmapType: 'default',
-      },
-      parentId,
-      extent: 'parent',
-    };
-    // Stage 7：同步走 applyCanvasChange（mindmap edges 由 buildCanvasState 派生为 []）
-    const newNodes = [...nodesRef.current, newNode];
-    setSelectedNodeId(newNode.id);
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
-  /** 删除 mindmap 节点：递归删除选中节点及其所有子节点 */
-  const handleDeleteMindmapNode = useCallback((nodeId: string) => {
-    // 构建 parentId → children[] 的映射
-    const childrenMap = new Map<string, MermaidNode[]>();
-    for (const node of nodesRef.current) {
-      const pid = node.parentId ?? '';
-      if (pid) {
-        const children = childrenMap.get(pid);
-        if (children) {
-          children.push(node);
-        } else {
-          childrenMap.set(pid, [node]);
-        }
-      }
-    }
-    // 递归收集要删除的节点 ID
-    const idsToDelete = collectDescendantIds(nodeId, childrenMap);
-    const idSet = new Set(idsToDelete);
-    // Stage 7：同步走 applyCanvasChange（mindmap edges 由 buildCanvasState 派生为 []）
-    const newNodes = nodesRef.current.filter((n) => !idSet.has(n.id));
-    setSelectedNodeId(null);
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
-  /** 选中 mindmap 节点 */
-  const handleSelectMindmapNode = useCallback((nodeId: string) => {
-    setSelectedNodeId(nodeId);
-    // 同步 React Flow 选中状态
-    setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === nodeId })));
-  }, [setNodes]);
-
-  // ============================================================
-  // architecture 操作（M7 新增）
-  // ============================================================
-
-  /** architecture: 完整节点更新（含 parentId 等） */
-  const handleUpdateNodeFull = useCallback((id: string, updates: Partial<MermaidNode>) => {
-    // Stage 7：同步构造 newNodes + applyCanvasChange（无 setTimeout）
-    const newNodes = nodesRef.current.map((n) => (n.id === id ? { ...n, ...updates } : n));
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
-  /** architecture: 完整边更新（含 sourceHandle 等） */
-  const handleUpdateEdgeFull = useCallback((id: string, updates: Partial<MermaidEdge>) => {
-    // Stage 7：同步构造 newEdges + applyCanvasChange（无 setTimeout）
-    const newEdges = edgesRef.current.map((e) => (e.id === id ? { ...e, ...updates } : e));
-    applyCanvasChange({ nodes: nodesRef.current, edges: newEdges });
-  }, [applyCanvasChange]);
-
-  /** architecture: 删除节点（v4：统一回调，支持 options.recursive）
-   * v4 决策 11：废弃 handleDeleteNode/handleDeleteGroup/handleRemoveGroupMember，统一到此回调
-   * v4 决策 7：group 删除支持两种模式
-   *   - recursive=true：递归删除子节点
-   *   - recursive=false（默认）：删除 group，子节点 parentId 清除（提升为顶层）
-   * group 删除时由 GraphCanvas 弹出确认对话框让用户选择
-   *
-   * Stage 7：同步计算所有新状态 → 单次 applyCanvasChange（消除 setTimeout + stale refs 竞态）
-   */
-  const handleDeleteNodeRecursive = useCallback((id: string, options?: { recursive?: boolean }) => {
-    const targetNode = nodesRef.current.find((n) => n.id === id);
-    if (!targetNode) return;
-
-    const isGroup = targetNode.type === 'arch-group'
-      || targetNode.data.shape === 'arch-group';
-
-    // group 删除：检查是否需要弹出确认对话框
-    if (isGroup && options === undefined) {
-      // 检查是否有子节点
-      const hasChildren = nodesRef.current.some((n) => n.parentId === id);
-      if (hasChildren) {
-        // 弹出确认对话框（由 UI 渲染）
-        const groupName = targetNode.data.label ?? targetNode.id;
-        setDeleteGroupConfirm({ groupId: id, groupName });
-        return;
-      }
-      // 无子节点，直接删除
-    }
-
-    const recursive = options?.recursive ?? false;
-
-    // 收集要删除的节点 ID
-    const idsToDelete = new Set<string>([id]);
-    if (recursive) {
-      // 递归收集所有后代
-      const childrenMap = new Map<string, MermaidNode[]>();
-      for (const node of nodesRef.current) {
-        const pid = node.parentId ?? '';
-        if (pid) {
-          const children = childrenMap.get(pid);
-          if (children) {
-            children.push(node);
-          } else {
-            childrenMap.set(pid, [node]);
-          }
-        }
-      }
-      const descendantIds = collectDescendantIds(id, childrenMap);
-      for (const descId of descendantIds) {
-        idsToDelete.add(descId);
-      }
-    }
-
-    // 同步计算新状态（无 setTimeout + stale refs 竞态）
-    let newNodes: MermaidNode[] = nodesRef.current.filter((n) => !idsToDelete.has(n.id));
-    // 非 recursive 模式：清除子节点的 parentId（提升为顶层）
-    if (!recursive) {
-      newNodes = newNodes.map((n) => {
-        if (n.parentId === id) {
-          const { parentId: _p, extent: _e, ...rest } = n;
-          void _p;
-          void _e;
-          return rest;
-        }
-        return n;
-      });
-    }
-    const newEdges = edgesRef.current.filter(
-      (e) => !idsToDelete.has(e.source) && !idsToDelete.has(e.target)
-    );
-    const newMetadata: GraphMetadata | undefined = (isGroup && metadataRef.current?.groups)
-      ? { ...metadataRef.current, groups: metadataRef.current.groups.filter((g) => g.id !== id) }
-      : metadataRef.current;
-
-    setArchSelectedId(null);
-    setDeleteGroupConfirm(null);
-
-    // 单次 applyCanvasChange，使用计算后的新状态
-    const opts: CanvasChangeOptions = { nodes: newNodes, edges: newEdges };
-    if (isGroup && newMetadata !== metadataRef.current) {
-      opts.metadata = newMetadata;
-    }
-    applyCanvasChange(opts);
-  }, [applyCanvasChange]);
-
-  /** architecture: 删除边 */
-  const handleDeleteEdge = useCallback((id: string) => {
-    // Stage 7：同步构造 newEdges + applyCanvasChange（无 setTimeout）
-    const newEdges = edgesRef.current.filter((e) => e.id !== id);
-    setSelectedEdgeId(null);
-    setArchSelectedId(null);
-    applyCanvasChange({ nodes: nodesRef.current, edges: newEdges });
-  }, [applyCanvasChange]);
-
-  /** v4：architecture 移动节点到其他 group（含循环引用检测）
-   * v4 决策 11：替代 handleRemoveGroupMember
-   * targetGroupId 为 null 表示移出 group（提升为顶层）
-   *
-   * Stage 7：同步构造 newNodes + applyCanvasChange（applyCanvasChange 内部已调用
-   * sortNodesByParentOrder，无需 caller 重复排序）
-   */
-  const handleMoveToGroup = useCallback((nodeId: string, targetGroupId: string | null) => {
-    // v4：循环引用检测
-    if (detectCycle(nodesRef.current, nodeId, targetGroupId)) {
-      setCodeError('无法移动节点到后代 group：会形成循环引用');
-      return;
-    }
-
-    const newNodes = nodesRef.current.map((n) => {
-      if (n.id !== nodeId) return n;
-      if (targetGroupId === null) {
-        // 移出 group：清除 parentId 和 extent
-        const { parentId: _p, extent: _e, ...rest } = n;
-        void _p;
-        void _e;
-        return rest;
-      }
-      // 移入 group：设置 parentId 和 extent
-      return { ...n, parentId: targetGroupId, extent: 'parent' as const };
-    });
-    setCodeError(null);
-    applyCanvasChange({ nodes: newNodes });
-  }, [applyCanvasChange]);
-
-  // ============================================================
-  // architecture 树形编辑回调（v3 新增，v4 修订）
-  // 注意：handleAddGroup/handleAddService/handleAddJunction 已移至 addNodeFromLibrary 之前
-  // ============================================================
-
-  // ============================================================
-  // architecture layout hints 回调（v4 新增）
-  // ============================================================
-
-  /** v4：添加 layout hint
-   * Stage 7：同步计算 newMetadata → applyCanvasChange（applyCanvasChange 内部同步更新
-   * metadataRef.current + setMetadata + 传入 buildCanvasState）
-   */
-  const handleAddLayoutHint = useCallback((direction: 'row' | 'column', members: string[]) => {
-    const prev = metadataRef.current;
-    const newHint: ArchitectureLayoutHint = { direction, members };
-    const newHints = [...(prev?.layoutHints ?? []), newHint];
-    const newMetadata: GraphMetadata = { ...prev, layoutHints: newHints };
-    applyCanvasChange({ nodes: nodesRef.current, edges: edgesRef.current, metadata: newMetadata });
-  }, [applyCanvasChange]);
-
-  /** v4：更新 layout hint
-   * Stage 7：同步计算 newMetadata → applyCanvasChange
-   */
-  const handleUpdateLayoutHint = useCallback((index: number, updates: Partial<ArchitectureLayoutHint>) => {
-    const prev = metadataRef.current;
-    if (!prev?.layoutHints) return;
-    const newHints = prev.layoutHints.map((h, i) => (i === index ? { ...h, ...updates } : h));
-    const newMetadata: GraphMetadata = { ...prev, layoutHints: newHints };
-    applyCanvasChange({ nodes: nodesRef.current, edges: edgesRef.current, metadata: newMetadata });
-  }, [applyCanvasChange]);
-
-  /** v4：删除 layout hint
-   * Stage 7：同步计算 newMetadata → applyCanvasChange
-   */
-  const handleDeleteLayoutHint = useCallback((index: number) => {
-    const prev = metadataRef.current;
-    if (!prev?.layoutHints) return;
-    const newHints = prev.layoutHints.filter((_, i) => i !== index);
-    const newMetadata: GraphMetadata = { ...prev, layoutHints: newHints };
-    applyCanvasChange({ nodes: nodesRef.current, edges: edgesRef.current, metadata: newMetadata });
-  }, [applyCanvasChange]);
-
-  /** v4：切换成员是否在 layout hint 中
-   * Stage 7：同步计算 newMetadata → applyCanvasChange
-   */
-  const handleToggleLayoutMember = useCallback((hintIndex: number, nodeId: string) => {
-    const prev = metadataRef.current;
-    if (!prev?.layoutHints) return;
-    const newHints = prev.layoutHints.map((h, i) => {
-      if (i !== hintIndex) return h;
-      const isMember = h.members.includes(nodeId);
-      return {
-        ...h,
-        members: isMember
-          ? h.members.filter((id) => id !== nodeId)
-          : [...h.members, nodeId],
-      };
-    });
-    const newMetadata: GraphMetadata = { ...prev, layoutHints: newHints };
-    applyCanvasChange({ nodes: nodesRef.current, edges: edgesRef.current, metadata: newMetadata });
-  }, [applyCanvasChange]);
-
-  /** v4：architecture 树形面板选中节点 */
-  const handleSelectArchNode = useCallback((nodeId: string) => {
-    setArchSelectedId({ type: 'node', id: nodeId });
-    setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === nodeId })));
-  }, [setNodes]);
-
-  /** v4：architecture 树形面板选中 group */
-  const handleSelectArchGroup = useCallback((groupId: string) => {
-    setArchSelectedId({ type: 'group', id: groupId });
-    setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === groupId })));
-  }, [setNodes]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -1354,20 +804,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
         const selectedEdges = edgesRef.current.filter((e) => e.selected);
         if (selectedNodes.length > 0 || selectedEdges.length > 0) {
           e.preventDefault();
-          // v4 修复#6：architecture 模式下，group 节点删除走 handleDeleteNodeRecursive
-          if (diagramType === 'architecture' && selectedNodes.length === 1) {
-            const node = selectedNodes[0];
-            const isGroup = node.type === 'arch-group'
-              || node.data.shape === 'arch-group';
-            if (isGroup) {
-              // group 删除走 v4 逻辑（会弹出确认对话框）
-              handleDeleteNodeRecursive(node.id);
-              return;
-            }
-            // 非 group 节点也走 handleDeleteNodeRecursive（统一删除逻辑）
-            handleDeleteNodeRecursive(node.id);
-            return;
-          }
           // Stage 7：同步计算新状态（删除 reactFlow.deleteElements + setTimeout 路径）
           // 删除前捕获被删 subgraph 的绝对位置，用于子节点坐标转换
           const deletedSubgraphAbsPos = new Map<string, { x: number; y: number }>();
@@ -1411,7 +847,7 @@ function GraphCanvasInner(props: GraphCanvasProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [diagramType, handleDeleteNodeRecursive, applyCanvasChange]);
+  }, [applyCanvasChange]);
 
   // ============================================================
   // M1: flowchart 右键菜单 + subgraph 创建/管理
@@ -1661,40 +1097,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
             {leftCollapsed ? '›' : '‹'}
           </button>
           <NodeLibrary diagramType={diagramType} onAddNode={addNodeFromLibrary} />
-          {diagramType === 'mindmap' && (
-            <MindmapTreePanel
-              nodes={nodes}
-              selectedNodeId={selectedNodeId}
-              onAddChild={handleAddChild}
-              onAddSibling={handleAddSibling}
-              onDeleteNode={handleDeleteMindmapNode}
-              onSelectNode={handleSelectMindmapNode}
-            />
-          )}
-          {diagramType === 'architecture' && (
-            <>
-              <ArchitectureTreePanel
-                nodes={nodes}
-                groups={metadata?.groups ?? []}
-                selectedId={archSelectedId?.type === 'edge' ? null : archSelectedId}
-                onAddGroup={handleAddGroup}
-                onAddService={handleAddService}
-                onAddJunction={handleAddJunction}
-                onDeleteNode={handleDeleteNodeRecursive}
-                onMoveToGroup={handleMoveToGroup}
-                onSelectNode={handleSelectArchNode}
-                onSelectGroup={handleSelectArchGroup}
-              />
-              <ArchitectureLayoutPanel
-                nodes={nodes}
-                layoutHints={metadata?.layoutHints ?? []}
-                onAddLayoutHint={handleAddLayoutHint}
-                onUpdateLayoutHint={handleUpdateLayoutHint}
-                onDeleteLayoutHint={handleDeleteLayoutHint}
-                onToggleLayoutMember={handleToggleLayoutMember}
-              />
-            </>
-          )}
         </div>
 
         <div className="canvas-container" onDoubleClick={onCanvasDoubleClick}>
@@ -1908,15 +1310,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
               />
             </div>
           )}
-
-          <ConsumedBadge
-            consumed={consumed}
-            canvasSource={canvasSource}
-            lastConsumedAt={lastConsumedAt}
-            onReset={onResetConsumed}
-          />
-
-          <ConnectionStatus status={connectionStatus} />
         </div>
 
         <div
@@ -1952,64 +1345,14 @@ function GraphCanvasInner(props: GraphCanvasProps) {
             onUpdateNode={handleUpdateNode}
             onUpdateEdge={handleUpdateEdge}
             nodes={nodes}
-            groups={metadata?.groups}
             edges={edges}
             onUpdateEdges={handleUpdateEdges}
-            selectedId={archSelectedId}
-            onUpdateNodeFull={handleUpdateNodeFull}
-            onUpdateEdgeFull={handleUpdateEdgeFull}
-            onDeleteNode={handleDeleteNodeRecursive}
-            onDeleteEdge={handleDeleteEdge}
-            onMoveToGroup={handleMoveToGroup}
             onMoveToSubgraph={handleMoveToSubgraph}
             onDeleteSubgraph={handleDeleteSubgraph}
             metadata={metadata}
             onUpdateMetadata={handleUpdateMetadata}
           />
         </div>
-
-        {deleteGroupConfirm && (
-          <div
-            className="tab-modal-overlay"
-            onClick={() => setDeleteGroupConfirm(null)}
-          >
-            <div className="tab-modal">
-              <h3 className="type-switch-title">
-                删除分组「{deleteGroupConfirm.groupName}」
-              </h3>
-              <p className="type-switch-message">
-                该分组下有子节点，请选择删除方式：
-              </p>
-              <ul style={{ margin: '0 0 16px 0', fontSize: 13, color: '#555', paddingLeft: 20 }}>
-                <li>递归删除：删除分组及其所有子节点</li>
-                <li>保留子节点：仅删除分组，子节点提升为顶层</li>
-              </ul>
-              <div className="tab-modal-actions">
-                <button
-                  type="button"
-                  className="tab-modal-btn tab-modal-cancel"
-                  onClick={() => setDeleteGroupConfirm(null)}
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  className="tab-modal-btn tab-modal-confirm"
-                  onClick={() => handleDeleteNodeRecursive(deleteGroupConfirm.groupId, { recursive: false })}
-                >
-                  保留子节点
-                </button>
-                <button
-                  type="button"
-                  className="tab-modal-btn tab-modal-confirm"
-                  onClick={() => handleDeleteNodeRecursive(deleteGroupConfirm.groupId, { recursive: true })}
-                >
-                  递归删除
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

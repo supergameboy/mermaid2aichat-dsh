@@ -27,6 +27,7 @@
   "files": [
     "lib/index.js",
     "lib/client.js",
+    "lib/client.js.map",
     "cordis.patch.yml",
     "README.md"
   ],
@@ -46,7 +47,7 @@
     "lightningcss": "^1.25.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tsdown": "^0.13.0",
+    "tsdown": "^0.22.2",
     "typescript": "^5.5.0"
   },
   "packageManager": "pnpm@10.16.0",

@@ -52,11 +52,8 @@ export function MermaidPanel({ useStore, actions, useSessions, sendToChat }: Mer
   const code = useStore((s) => s.code)
   const viewport = useStore((s) => s.viewport)
 
-  // 当前会话 id（blank 会话视为无会话）
-  const sessionId = useSessions((s) => {
-    const current = s.current
-    return current !== undefined && s.byId[current]?.blank === false ? current : undefined
-  })
+  // 当前会话 id（只要存在当前会话即可发送——发送本身就是给空白会话的第一条消息）
+  const sessionId = useSessions((s) => s.current)
 
   const [pendingSwitch, setPendingSwitch] = useState<DiagramType | null>(null)
   const [sending, setSending] = useState(false)

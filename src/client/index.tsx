@@ -25,13 +25,14 @@ export function apply(ctx: Context): void {
   const handle = createMermaidPanelStore()
 
   ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register(
-    { name: 'sidebar.footer.action', store: handle },
+    { name: 'sidebar.footer.action', id: 'mermaid-launcher', store: handle },
     MermaidLauncher,
   ))
 
   ctx.slots.inject('shell.overlay', () => ctx.slots.register(
     {
       name: 'shell.overlay',
+      id: 'mermaid-panel',
       store: handle,
       inject: () => ({
         sendToChat: async (code: string, sessionId: string): Promise<void> => {
