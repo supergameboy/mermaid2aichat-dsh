@@ -85,8 +85,16 @@ interface DshConversationSnapshot {
   nodes: readonly DshConversationNode[]
 }
 
+/** prompt 结果的最小面（判别联合）。 */
+type DshPromptResult =
+  | { ok: true; value: unknown }
+  | { ok: false; error: { code: string; message: string } }
+
 interface DshSessionBinding {
-  session: DshObservable<DshConversationSnapshot>
+  session: DshObservable<DshConversationSnapshot> & {
+    /** 向会话发送提示（'queue' 追加一个轮次）。 */
+    prompt(content: readonly { type: string; text: string }[], mode: 'queue' | 'steer'): Promise<DshPromptResult>
+  }
 }
 
 interface DshSessions {

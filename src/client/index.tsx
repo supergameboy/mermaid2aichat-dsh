@@ -47,9 +47,15 @@ export function apply(ctx: Context): void {
       inject: () => ({
         hooks: { blocks: blocks.source },
         sendToChat: async (code: string, sessionId: string): Promise<void> => {
-          const scope = ctx.sessions.scope(sessionId)
-          if (scope === undefined) throw new Error('未找到会话，无法发送')
-          await scope.conversation.send(`\`\`\`mermaid\n${code}\n\`\`\``)
+          // 直接走 SessionFace.prompt（ConversationController.send 的内部路径），
+          // 避免 scope 寻址属性代理在 scope fiber 上抛 inject 守卫错误。
+          const binding = ctx.sessions.binding(sessionId)
+          if (binding === undefined) throw new Error('未找到会话，无法发送')
+          const result = await binding.session.prompt(
+            [{ type: 'text', text: `\`\`\`mermaid\n${code}\n\`\`\`` }],
+            'queue',
+          )
+          if (!result.ok) throw new Error(`发送失败：${result.error.code}: ${result.error.message}`)
         },
       }),
     },
