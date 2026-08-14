@@ -100,7 +100,11 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
     if (freshKeys.length === 0) return
     const fresh = blocks.filter((b) => freshKeys.includes(b.key))
     const toolBlocks = fresh.filter((b) => b.fromTool === true)
+    let toolImported = 0
     for (const block of toolBlocks) {
+      // 幂等：同一来源块只导入一次（partial 流与最终消息可能重复触发）
+      const already = sessions[sid]?.views.some((v) => v.sourceBlockKey === block.key)
+      if (already) continue
       const parsed = parseMermaid(block.code)
       const canvas: CanvasState = parsed.success ? parsed.canvas : createEmptyCanvasState('flowchart')
       mermaidActions.addView(sid, {
@@ -110,9 +114,10 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
         sourceBlockKey: block.key,
         fromTool: true,
       })
+      toolImported += 1
     }
-    if (toolBlocks.length > 0) {
-      showToast(`AI 已通过工具导入 ${toolBlocks.length} 段 Mermaid 代码`, 'success')
+    if (toolImported > 0) {
+      showToast(`AI 已通过工具导入 ${toolImported} 段 Mermaid 代码`, 'success')
     }
     const manualBlocks = fresh.filter((b) => b.fromTool !== true)
     if (manualBlocks.length > 0 && open) {

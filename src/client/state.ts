@@ -118,21 +118,29 @@ export interface MermaidViewInit {
   fromTool?: boolean
 }
 
-/** 会话标签集合的不可变更新辅助：缺失的会话先物化一个空白标签，再交给 fn。 */
+/** 会话标签集合的不可变更新辅助：缺失的会话从空集合开始，fn 负责构建内容。 */
 function updateSession(
   state: MermaidAppState,
   sessionId: string,
   fn: (session: MermaidSessionViews) => MermaidSessionViews,
 ): MermaidAppState {
   const current = state.sessions[sessionId]
-  const base = current !== undefined
-    ? current
-    : (() => { const v = emptyView(); return { views: [v], activeViewId: v.id } })()
+  const base = current ?? { views: [], activeViewId: '' }
   let next = fn(base)
-  if (next.views.length > 0 && !next.views.some((v) => v.id === next.activeViewId)) {
+  if (next.views.length === 0) {
+    const fresh = emptyView()
+    next = { views: [fresh], activeViewId: fresh.id }
+  } else if (!next.views.some((v) => v.id === next.activeViewId)) {
     next = { ...next, activeViewId: next.views[0].id }
   }
   return { ...state, sessions: { ...state.sessions, [sessionId]: next } }
+}
+
+/** 会话无标签时物化一个空白活动标签（写入类动作的前置步骤）。 */
+function withActiveView(session: MermaidSessionViews): MermaidSessionViews {
+  if (session.views.length > 0) return session
+  const fresh = emptyView()
+  return { views: [fresh], activeViewId: fresh.id }
 }
 
 /**
@@ -213,22 +221,31 @@ export function createMermaidState(): {
       }))
     },
     setCanvas: (sessionId, canvas) => {
-      commit(updateSession(state, sessionId, (session) => ({
-        ...session,
-        views: session.views.map((v) => (v.id === session.activeViewId ? { ...v, canvas } : v)),
-      })))
+      commit(updateSession(state, sessionId, (session) => {
+        const active = withActiveView(session)
+        return {
+          ...active,
+          views: active.views.map((v) => (v.id === active.activeViewId ? { ...v, canvas } : v)),
+        }
+      }))
     },
     setCode: (sessionId, code) => {
-      commit(updateSession(state, sessionId, (session) => ({
-        ...session,
-        views: session.views.map((v) => (v.id === session.activeViewId ? { ...v, code } : v)),
-      })))
+      commit(updateSession(state, sessionId, (session) => {
+        const active = withActiveView(session)
+        return {
+          ...active,
+          views: active.views.map((v) => (v.id === active.activeViewId ? { ...v, code } : v)),
+        }
+      }))
     },
     setViewport: (sessionId, viewport) => {
-      commit(updateSession(state, sessionId, (session) => ({
-        ...session,
-        views: session.views.map((v) => (v.id === session.activeViewId ? { ...v, viewport } : v)),
-      })))
+      commit(updateSession(state, sessionId, (session) => {
+        const active = withActiveView(session)
+        return {
+          ...active,
+          views: active.views.map((v) => (v.id === active.activeViewId ? { ...v, viewport } : v)),
+        }
+      }))
     },
     markBlocksSeen: (keys) => {
       if (keys.length === 0) return

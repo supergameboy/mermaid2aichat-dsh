@@ -34,6 +34,9 @@ interface SessionListSnapshot {
 interface AssistantBlock {
   kind: string
   text?: string
+  /** 工具调用块：工具名与原始参数字符串。 */
+  name?: string
+  argsRaw?: string
 }
 
 /** 最小面：非助手消息的内容块（user/steering/context 共形）。 */
@@ -49,13 +52,13 @@ interface ConversationNode {
   time: number
   blocks?: readonly AssistantBlock[]
   content?: readonly ContentBlock[]
-  /** 工具结果节点：来源调用名（mermaid_load 标记为工具块）。 */
-  call?: { name: string } | null
 }
 
 /** 最小面：会话快照。 */
 interface ConversationSnapshot {
   nodes: readonly ConversationNode[]
+  /** 进行中的助手输出（工具调用块在调用发生时即可见）。 */
+  partial?: { turn: number; blocks?: readonly AssistantBlock[] } | null
 }
 
 /** 最小面：会话绑定。 */
@@ -91,14 +94,33 @@ export function extractMermaidBlocks(text: string): { code: string; preview: str
   return out
 }
 
-/** 扫描快照中的全部代码块（键 = seq:index）。覆盖助手/用户/上下文消息与 mermaid_load 工具结果。 */
-function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
+/**
+ * 扫描快照中的全部代码块。覆盖：
+ * - 助手/用户/steering/context 消息中的 ```mermaid 围栏（键 = seq:index）
+ * - mermaid_load 工具调用块（含进行中的 partial 流）：读取调用参数里的 code，
+ *   键 = tool:hash(code)——partial 与最终消息里的同一调用按内容去重，标记 fromTool
+ */
+export function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
   const out: MermaidBlockView[] = []
+  const seenToolKeys = new Set<string>()
+  const pushToolBlock = (block: AssistantBlock, seq: number, time: number): void => {
+    const args = parseToolArgs(block.argsRaw)
+    if (args.code === undefined) return
+    const found = extractMermaidBlocks(`\`\`\`mermaid\n${args.code}\n\`\`\``)[0]
+    if (found === undefined) return
+    const key = `tool:${hashCode(found.code)}`
+    if (seenToolKeys.has(key)) return
+    seenToolKeys.add(key)
+    out.push({ key, seq, time, preview: found.preview, code: found.code, fromTool: true })
+  }
   for (const node of snapshot.nodes) {
     let index = 0
-    const fromTool = node.kind === 'tool-result' && node.call?.name === 'mermaid_load'
     if (node.kind === 'assistant') {
       for (const block of node.blocks ?? []) {
+        if (block.kind === 'tool-call' && block.name === 'mermaid_load') {
+          pushToolBlock(block, node.seq, node.time)
+          continue
+        }
         if (block.kind !== 'text' || block.text === undefined) continue
         for (const found of extractMermaidBlocks(block.text)) {
           out.push({
@@ -113,8 +135,7 @@ function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
       }
       continue
     }
-    // 工具结果的内容块与用户消息同形（type === 'text'）
-    if (node.kind === 'user' || node.kind === 'steering' || node.kind === 'context' || node.kind === 'tool-result') {
+    if (node.kind === 'user' || node.kind === 'steering' || node.kind === 'context') {
       for (const block of node.content ?? []) {
         if (block.type !== 'text' || block.text === undefined) continue
         for (const found of extractMermaidBlocks(block.text)) {
@@ -124,14 +145,42 @@ function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
             time: node.time,
             preview: found.preview,
             code: found.code,
-            ...(fromTool ? { fromTool: true } : {}),
           })
           index += 1
         }
       }
     }
   }
+  // 进行中的助手输出：工具调用块在调用发生时即可见（seq 用 0 占位，键按内容去重）
+  for (const block of snapshot.partial?.blocks ?? []) {
+    if (block.kind === 'tool-call' && block.name === 'mermaid_load') {
+      pushToolBlock(block, 0, Date.now())
+    }
+  }
   return out
+}
+
+/** 内容哈希（djb2，用于工具块跨 partial/最终消息去重）。 */
+function hashCode(text: string): string {
+  let hash = 5381
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0
+  }
+  return hash.toString(36)
+}
+
+/** 解析工具调用参数字符串（容忍非 JSON / 缺 code 字段）。 */
+function parseToolArgs(raw: string | undefined): { code?: string } {
+  if (raw === undefined) return {}
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (parsed !== null && typeof parsed === 'object' && typeof (parsed as { code?: unknown }).code === 'string') {
+      return { code: (parsed as { code: string }).code }
+    }
+  } catch {
+    // 非 JSON 参数无法提取，按无代码处理。
+  }
+  return {}
 }
 
 /** 键列表相同 ⟺ 集合未变（内容不可变）。 */
