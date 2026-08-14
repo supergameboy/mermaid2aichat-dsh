@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
-import type { MermaidView } from './store.js'
+import type { MermaidView } from './state.js'
 import css from './PluginTabBar.module.css'
 
 export interface PluginTabBarProps {

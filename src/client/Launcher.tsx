@@ -3,23 +3,23 @@
  * 未读的对话 Mermaid 代码块以角标数量显示在按钮上。
  */
 import type { MermaidBlockView } from './blocks.js'
-import type { MermaidPanelBakedActions, MermaidPanelState } from './store.js'
+import type { MermaidActions, MermaidAppState } from './state.js'
 import css from './Launcher.module.css'
 
 export interface MermaidLauncherProps {
   /** 侧边栏是否展开（owner 参数，来自 sidebar.footer.action 槽位）。 */
   wide?: boolean
-  /** store 读接口（框架注入）。 */
-  useStore: <S>(sel: (s: MermaidPanelState) => S, eq?: (a: S, b: S) => boolean) => S
-  /** store 写接口（框架注入）。 */
-  actions: MermaidPanelBakedActions
+  /** 面板状态选择器 hook（apply 注入的 hooks 仓）。 */
+  useMermaid: <S>(sel: (s: MermaidAppState) => S, eq?: (a: S, b: S) => boolean) => S
+  /** 面板写动作（apply 注入）。 */
+  mermaidActions: MermaidActions
   /** 对话代码块选择器 hook（apply 注入的 hooks 仓）。 */
   useBlocks: <S>(sel: (blocks: readonly MermaidBlockView[]) => S, eq?: (a: S, b: S) => boolean) => S
 }
 
-export function MermaidLauncher({ wide = true, useStore, actions, useBlocks }: MermaidLauncherProps) {
-  const open = useStore((s) => s.open)
-  const seenBlockKeys = useStore((s) => s.seenBlockKeys)
+export function MermaidLauncher({ wide = true, useMermaid, mermaidActions, useBlocks }: MermaidLauncherProps) {
+  const open = useMermaid((s) => s.open)
+  const seenBlockKeys = useMermaid((s) => s.seenBlockKeys)
   const blocks = useBlocks((b) => b)
   const unseen = blocks.filter((b) => !seenBlockKeys.includes(b.key)).length
 
@@ -29,7 +29,7 @@ export function MermaidLauncher({ wide = true, useStore, actions, useBlocks }: M
       className={css.launcher}
       data-active={open || undefined}
       title={open ? '关闭 Mermaid 反向编辑器' : '打开 Mermaid 反向编辑器'}
-      onClick={() => { actions.toggleOpen() }}
+      onClick={() => { mermaidActions.toggleOpen() }}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="5" cy="6" r="2.2" />

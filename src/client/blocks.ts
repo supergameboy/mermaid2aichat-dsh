@@ -21,6 +21,8 @@ export interface MermaidBlockView {
   preview: string
   /** 完整代码（不含围栏）。 */
   code: string
+  /** 是否来自 AI 的 mermaid_load 工具调用（这类块会被面板自动导入）。 */
+  fromTool?: boolean
 }
 
 /** 最小面：会话列表快照。 */
@@ -47,6 +49,8 @@ interface ConversationNode {
   time: number
   blocks?: readonly AssistantBlock[]
   content?: readonly ContentBlock[]
+  /** 工具结果节点：来源调用名（mermaid_load 标记为工具块）。 */
+  call?: { name: string } | null
 }
 
 /** 最小面：会话快照。 */
@@ -87,11 +91,12 @@ export function extractMermaidBlocks(text: string): { code: string; preview: str
   return out
 }
 
-/** 扫描快照中的全部代码块（键 = seq:index）。覆盖助手与用户/上下文消息。 */
+/** 扫描快照中的全部代码块（键 = seq:index）。覆盖助手/用户/上下文消息与 mermaid_load 工具结果。 */
 function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
   const out: MermaidBlockView[] = []
   for (const node of snapshot.nodes) {
     let index = 0
+    const fromTool = node.kind === 'tool-result' && node.call?.name === 'mermaid_load'
     if (node.kind === 'assistant') {
       for (const block of node.blocks ?? []) {
         if (block.kind !== 'text' || block.text === undefined) continue
@@ -108,7 +113,8 @@ function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
       }
       continue
     }
-    if (node.kind === 'user' || node.kind === 'steering' || node.kind === 'context') {
+    // 工具结果的内容块与用户消息同形（type === 'text'）
+    if (node.kind === 'user' || node.kind === 'steering' || node.kind === 'context' || node.kind === 'tool-result') {
       for (const block of node.content ?? []) {
         if (block.type !== 'text' || block.text === undefined) continue
         for (const found of extractMermaidBlocks(block.text)) {
@@ -118,6 +124,7 @@ function scanBlocks(snapshot: ConversationSnapshot): MermaidBlockView[] {
             time: node.time,
             preview: found.preview,
             code: found.code,
+            ...(fromTool ? { fromTool: true } : {}),
           })
           index += 1
         }

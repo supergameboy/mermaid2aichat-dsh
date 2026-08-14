@@ -10,48 +10,59 @@
 
 - 右侧可关闭面板：侧边栏底部按钮打开/关闭；**页面内全屏**（⧉ 全屏，覆盖整个页面，
   非浏览器全屏）解决画布显示区域过小的问题
+- **会话隔离**：编辑器自动跟随当前会话，标签页按会话分别存储与切换——
+  切换 dsh 会话时面板自动切换到该会话自己的标签
 - **多标签管理**：新建（+）/ 切换 / 关闭（确认弹窗）/ 双击重命名 / 拖拽排序，
   每个标签独立持有画布、代码与视口，整值持久化
 - 可视化编辑 + Mermaid 代码双向同步（画布编辑 → 代码；代码编辑 → 画布）
 - 四种图表类型切换（工具栏下拉或代码首行修改，弹窗确认）
 - 节点库拖拽添加、连线、属性面板、子图/命名空间/实体/参与者等专用编辑器
 - **双向 Mermaid 代码传输**（插件核心需求，与 Agent 直接通信）：
-  - 编辑器 → 对话：「发送到对话」把活动标签的代码块送入当前会话
-  - 对话 → 编辑器：响应式扫描当前会话中的 ```mermaid 代码块（AI 产出或用户消息），
-    侧边栏按钮角标提示，「从对话导入」一键解析为新标签，用户查看/编辑后发回 Agent 反馈
+  - **AI → 编辑器（工具通道）**：注册模型工具 `mermaid_load`（宿主全局层，
+    无需修改 preset），AI 调用工具后代码**自动导入**为编辑器新标签
+  - 对话 → 编辑器：响应式扫描当前会话中的 ```mermaid 代码块（AI 消息/用户消息/工具结果），
+    侧边栏按钮角标提示，「从对话导入」一键解析为新标签
+  - 编辑器 → 对话：「发送到对话」把活动标签的代码块送入当前会话（SessionFace.prompt）
+  - **输入框引用**：在 dsh 输入框输入 `/`，触发菜单的「mermaid」组列出当前会话的
+    标签页，选中即把该标签的 Mermaid 代码块插入草稿
 - 画布与代码整值持久化到 localStorage，刷新/重开面板自动恢复
 - 独立暗色模式（仅作用于面板内部，不影响 dsh 主题）
 
 ## 架构
 
-一个 npm 包同时是两种角色：
+一个 npm 包同时是三种角色：
 
 1. **bundle（补丁层）**：`dsh.bundle.patch` 指向 `cordis.patch.yml`，
    它把插件注册为一行 `dsh.client` 组合。安装后 `dsh-client-modules` 扫描该行、
    注入 `window.__DSH_BOOT__`，前端按需加载 `lib/client.js`。
-2. **client 插件（浏览器半边）**：注册两个界面贡献——
-   - `sidebar.footer.action`：启动按钮
-   - `shell.overlay`：右侧浮动编辑器面板（共享一个 store 句柄）
+2. **host 插件（节点半边）**：注册模型工具 `mermaid_load`（`ctx.tools.register`，
+   全局层，每个会话的 agent 可见）。
+3. **client 插件（浏览器半边）**：注册两个界面贡献 + 一个输入触发源——
+   - `sidebar.footer.action`：启动按钮（未读代码块角标）
+   - `shell.overlay`：右侧浮动编辑器面板（会话隔离多标签 + 全屏 + 对话导入）
+   - `inputTriggers`：'/' 触发源「mermaid」（输入框引用标签页代码）
 
 通信路径（无 MCP / 无服务端）：
 
 ```
-编辑器画布 ──onCanvasChange──▶ 共享 store（localStorage 持久化，多标签）
-共享 store ──「发送到对话」──▶ ctx.sessions.scope(id).conversation.send()
+编辑器画布 ──onCanvasChange──▶ 状态源 state.ts（localStorage 持久化，按会话隔离）
+状态源 ──「发送到对话」──▶ SessionFace.prompt('queue')
+AI 工具 mermaid_load ──执行──▶ 工具结果（```mermaid 文本）──▶ blocks 源扫描 ──▶ 自动导入
 对话会话 ──blocks 可观测源──▶ useBlocks() ──「从对话导入」──▶ 解析为新标签
+输入框 '/' ──触发源「mermaid」──▶ 当前会话标签页 ──▶ 插入代码块到草稿
 ```
 
-对话 → 编辑器方向：`blocks.ts` 订阅当前会话的 ConversationSnapshot（`ctx.sessions.list` +
-`binding(id).session`），扫描消息中的 ```mermaid 代码块，经槽位 inject 的 hooks 仓
-绑定为 `useBlocks` 选择器钩子，响应式驱动角标、提示与导入下拉。
+状态层（`client/state.ts`）是自研可观测源：面板、启动按钮、触发源与代码块自动导入
+共享同一实例；`blocks.ts` 订阅当前会话的 ConversationSnapshot 扫描 mermaid 代码块
+（含 `mermaid_load` 工具结果，自动导入为新标签）。
 
 编辑器与序列化器源码内联在 `lib/client.js` 中（`@xyflow/react`、`dagre-cluster-fix`、
 `js-yaml` 全部打包进 bundle；react 等平台模块由 dsh shell 的模块表提供）。
 
 ```
 src/
-  index.ts              节点半边（空插件体，供宿主 Loader 加载）
-  client/               DSH 插件（面板 + 启动按钮 + store + 对话桥接）
+  index.ts              节点半边（注册模型工具 mermaid_load）
+  client/               DSH 插件（状态源 + 面板 + 启动按钮 + 触发源 + 对话扫描）
   editor/               编辑器 UI（画布、工具栏、节点库、属性面板、代码编辑器）
   serializer/           解析/序列化器（4 种图表类型的 jison 解析器 + 序列化器）
 cordis.patch.yml        bundle 补丁层
@@ -82,7 +93,14 @@ dsh plugin --profile web add github:<你的账号>/mermaid-dsh-plugin
 > 若 pnpm 因 prepare 脚本阻止构建，按提示在
 > `$DSH_HOME/profiles/web/pnpm-workspace.yaml` 的 `allowBuilds` 中放行该包，或改用方式一。
 
-安装后重启 `dsh web`，刷新页面即可在侧边栏底部看到「Mermaid 编辑器」按钮。
+安装后重启 `dsh web`（模型工具 mermaid_load 在宿主启动时注册，必须重启生效），
+刷新页面即可在侧边栏底部看到「Mermaid 编辑器」按钮。
+
+### 试用 AI 工具通道
+
+在对话中对 Agent 说「把 XXX 的流程画成 flowchart 送到编辑器」——
+Agent 调用 `mermaid_load` 工具后，图表会**自动**出现在编辑器的新标签页中，
+无需任何手动导入。
 
 ## 开发
 
@@ -115,3 +133,5 @@ npm publish
   需先上滑加载历史后才会被扫描到。
 - 客户端 bundle 体积较大（内联了 React Flow 等全部编辑器依赖），首次加载面板时
   由浏览器按需拉取。
+- 输入框引用（`/` 触发源）只能替换草稿为代码块（产品输入机的公开写入面是
+  `setDraft` 语义），不能追加到已有草稿尾部。

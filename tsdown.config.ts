@@ -13,7 +13,7 @@ import { transform } from 'lightningcss'
 
 const ID = 'mermaid2aichat-dsh'
 
-/** Shell 共享的平台模块（与 @deepseek-ai/dsh-client-web/src/platform.ts 一致，外加运行时 store 引擎豁免）。 */
+/** Shell 共享的平台模块（与 @deepseek-ai/dsh-client-web/src/platform.ts 一致）。 */
 const CLIENT_EXTERNALS = [
   'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', '@deepseek-ai/cordis',
   '@deepseek-ai/dsh-client-ui-slots',
@@ -21,7 +21,6 @@ const CLIENT_EXTERNALS = [
   '@deepseek-ai/dsh-client-ui-primitives',
   '@deepseek-ai/dsh-client-ui-attachment',
   '@deepseek-ai/dsh-client-schema-form',
-  '@deepseek-ai/dsh-client-runtime/client',
 ]
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url))
@@ -84,6 +83,9 @@ export default defineConfig([
     dts: false,
     clean: false,
     fixedExtension: false,
+    // 宿主包（@deepseek-ai/* 未发布到 npm）：运行时经 profile 的 healed
+    // node_modules 回退解析，构建期保持 external，不内联（避免重复 cordis）。
+    external: ['@deepseek-ai/dsh-tools', '@deepseek-ai/cordis'],
     resolve: {
       alias: {
         '@mermaid2aichat/serializer': resolvePath(ROOT, 'src/serializer/index.ts'),

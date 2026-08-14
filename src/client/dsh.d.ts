@@ -11,8 +11,8 @@ declare module '@deepseek-ai/cordis' {
     slots: DshSlots
     /** 会话服务（dsh-client-runtime 提供）。 */
     sessions: DshSessions
-    /** 会话作用域对话服务（ui-conversation 提供）。 */
-    conversation: DshConversation
+    /** 输入触发源注册（ui-input-trigger 提供）。 */
+    inputTriggers: DshInputTriggers
     /** 严格读取可选服务。 */
     get(name: string): unknown
     /** 注册随 fiber 销毁的副作用。 */
@@ -20,20 +20,9 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
-declare module '@deepseek-ai/dsh-client-runtime/client' {
-  export interface StoreSpec<T, A> {
-    init: () => T
-    /** 持久化键（localStorage 整值 JSON，自动恢复/写入）。 */
-    persist?: string
-    actions: A
-  }
-  export interface EngineStoreHandle<T, A> {
-    readonly spec: StoreSpec<T, A>
-    create(scopeKey?: string): unknown
-  }
-  export function defineStore<T, A extends Record<string, (draft: T, ...args: any[]) => void>>(
-    spec: StoreSpec<T, A>,
-  ): EngineStoreHandle<T, A>
+/** 输入触发源注册面的最小契约。 */
+interface DshInputTriggers {
+  registerSource(source: unknown): () => void
 }
 
 /** 槽位注册选项（最小面）。 */
@@ -57,10 +46,6 @@ interface DshSlots {
 
 /** 会话 id（opaque 字符串）。 */
 type DshSessionId = string
-
-interface DshSessionScope {
-  conversation: DshConversation
-}
 
 /** 可观测快照（getSnapshot + subscribe）。 */
 interface DshObservable<T> {
@@ -102,13 +87,6 @@ interface DshSessions {
   list: DshObservable<DshSessionListState>
   /** 取会话绑定（未列出/未挂载的会话返回 undefined）。 */
   binding(id: DshSessionId): DshSessionBinding | undefined
-  /** 取会话作用域上下文（无该会话时返回 undefined）。 */
-  scope(id: DshSessionId): DshSessionScope | undefined
-}
-
-interface DshConversation {
-  /** 向调用方作用域会话发送一条提示（进入队列）。 */
-  send(text: string): Promise<void>
 }
 
 /** useSessions 全局快照的最小面。 */
