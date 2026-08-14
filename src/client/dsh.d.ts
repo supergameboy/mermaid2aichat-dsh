@@ -62,7 +62,38 @@ interface DshSessionScope {
   conversation: DshConversation
 }
 
+/** 可观测快照（getSnapshot + subscribe）。 */
+interface DshObservable<T> {
+  getSnapshot(): T
+  subscribe(fn: () => void): () => void
+}
+
+/** 会话列表快照的最小面。 */
+interface DshSessionListState {
+  current?: DshSessionId
+}
+
+/** 对话快照的最小面（仅取消息节点与助手文本块）。 */
+interface DshConversationNode {
+  kind: string
+  seq: number
+  time: number
+  blocks?: readonly { kind: string; text?: string }[]
+}
+
+interface DshConversationSnapshot {
+  nodes: readonly DshConversationNode[]
+}
+
+interface DshSessionBinding {
+  session: DshObservable<DshConversationSnapshot>
+}
+
 interface DshSessions {
+  /** 会话列表（useSessions 的标准源）。 */
+  list: DshObservable<DshSessionListState>
+  /** 取会话绑定（未列出/未挂载的会话返回 undefined）。 */
+  binding(id: DshSessionId): DshSessionBinding | undefined
   /** 取会话作用域上下文（无该会话时返回 undefined）。 */
   scope(id: DshSessionId): DshSessionScope | undefined
 }

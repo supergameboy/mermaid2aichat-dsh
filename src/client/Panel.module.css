@@ -8,11 +8,19 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  width: clamp(440px, 44vw, 780px);
+  width: clamp(460px, 50vw, 900px);
   background: var(--dsw-specific-sidebar-fill, #ffffff);
   border-left: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
   box-shadow: -12px 0 32px rgba(0, 0, 0, 0.18);
   font-family: inherit;
+}
+
+/* 页面内全屏：覆盖整个页面（非浏览器全屏） */
+.maximized {
+  left: 0;
+  width: 100vw;
+  border-left: none;
+  box-shadow: none;
 }
 
 .header {
@@ -95,6 +103,91 @@
   color: var(--dsw-alias-label-primary, #111);
 }
 
+/* 幽灵按钮（导入 / 全屏等次要操作） */
+.actionGhost {
+  padding: 5px 10px;
+  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.14));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, #111);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.actionGhost:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+}
+
+/* 从对话导入下拉 */
+.importWrap {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 300;
+  width: 320px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  background: var(--dsw-alias-button-elevated-fill, #ffffff);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
+.dropdownTitle {
+  padding: 2px 6px 8px;
+  font-size: 11px;
+  color: var(--dsw-alias-label-secondary, #555);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.dropdownItem:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+.dropdownPreview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary, #111);
+}
+
+.importBtn {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #3b6ef6;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.importBtn:hover:not(:disabled) {
+  background: #2f5bd8;
+}
+
+.importBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .body {
   position: relative;
   flex: 1;
@@ -130,4 +223,18 @@
 :global(.dark).panel .close {
   color: #b8b8c0;
   border-color: rgba(255, 255, 255, 0.14);
+}
+
+:global(.dark).panel .actionGhost {
+  color: #d8d8de;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+:global(.dark).panel .dropdown {
+  background: #1e1f24;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark).panel .dropdownPreview {
+  color: #e8e8ea;
 }

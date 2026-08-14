@@ -8,11 +8,17 @@
 
 ## 功能特性
 
-- 右侧可关闭面板：侧边栏底部按钮打开/关闭，面板可随窗口缩放
+- 右侧可关闭面板：侧边栏底部按钮打开/关闭；**页面内全屏**（⧉ 全屏，覆盖整个页面，
+  非浏览器全屏）解决画布显示区域过小的问题
+- **多标签管理**：新建（+）/ 切换 / 关闭（确认弹窗）/ 双击重命名 / 拖拽排序，
+  每个标签独立持有画布、代码与视口，整值持久化
 - 可视化编辑 + Mermaid 代码双向同步（画布编辑 → 代码；代码编辑 → 画布）
 - 四种图表类型切换（工具栏下拉或代码首行修改，弹窗确认）
 - 节点库拖拽添加、连线、属性面板、子图/命名空间/实体/参与者等专用编辑器
-- 「发送到对话」：一键把 Mermaid 代码块发送到当前会话，让 AI 直接处理
+- **双向 Mermaid 代码传输**（插件核心需求，与 Agent 直接通信）：
+  - 编辑器 → 对话：「发送到对话」把活动标签的代码块送入当前会话
+  - 对话 → 编辑器：响应式扫描当前会话中的 ```mermaid 代码块（AI 产出或用户消息），
+    侧边栏按钮角标提示，「从对话导入」一键解析为新标签，用户查看/编辑后发回 Agent 反馈
 - 画布与代码整值持久化到 localStorage，刷新/重开面板自动恢复
 - 独立暗色模式（仅作用于面板内部，不影响 dsh 主题）
 
@@ -30,9 +36,14 @@
 通信路径（无 MCP / 无服务端）：
 
 ```
-编辑器画布 ──onCanvasChange──▶ 共享 store（localStorage 持久化）
+编辑器画布 ──onCanvasChange──▶ 共享 store（localStorage 持久化，多标签）
 共享 store ──「发送到对话」──▶ ctx.sessions.scope(id).conversation.send()
+对话会话 ──blocks 可观测源──▶ useBlocks() ──「从对话导入」──▶ 解析为新标签
 ```
+
+对话 → 编辑器方向：`blocks.ts` 订阅当前会话的 ConversationSnapshot（`ctx.sessions.list` +
+`binding(id).session`），扫描消息中的 ```mermaid 代码块，经槽位 inject 的 hooks 仓
+绑定为 `useBlocks` 选择器钩子，响应式驱动角标、提示与导入下拉。
 
 编辑器与序列化器源码内联在 `lib/client.js` 中（`@xyflow/react`、`dagre-cluster-fix`、
 `js-yaml` 全部打包进 bundle；react 等平台模块由 dsh shell 的模块表提供）。
@@ -100,8 +111,7 @@ npm publish
 
 - 仅支持 flowchart / sequenceDiagram / classDiagram / erDiagram 四种图表类型；
   其它类型（state、gantt、mindmap 等）的代码已移除，解析时会提示不支持。
-- 图结构类型（flowchart/class/er）的节点**位置**不会跨面板关闭持久化
-  （节点内容与代码会持久化；重开面板时按 dagre 重新布局）。这是「代码即真相」
-  语义的取舍。
+- 「从对话导入」只扫描当前会话**已加载的消息窗口**；消息分页之外的旧消息
+  需先上滑加载历史后才会被扫描到。
 - 客户端 bundle 体积较大（内联了 React Flow 等全部编辑器依赖），首次加载面板时
   由浏览器按需拉取。
