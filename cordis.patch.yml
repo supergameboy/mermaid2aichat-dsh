@@ -1,0 +1,7 @@
+# Mermaid 反向编辑器 — DSH 插件补丁层
+# 通过 `dsh plugin --profile web add mermaid2aichat-dsh` 安装后，
+# 本补丁把插件注册为浏览器端（dsh.client）行，由 dsh-client-modules
+# 扫描并注入 window.__DSH_BOOT__，前端加载 lib/client.js。
+- insert:
+    - id: mermaid-editor
+      name: 'mermaid2aichat-dsh'

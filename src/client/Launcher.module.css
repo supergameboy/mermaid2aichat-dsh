@@ -1,0 +1,29 @@
+.launcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #555);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+
+.launcher:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+  color: var(--dsw-alias-label-primary, #111);
+}
+
+.launcher[data-active] {
+  color: var(--dsw-alias-accent, #3b6ef6);
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

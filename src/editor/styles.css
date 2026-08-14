@@ -1,0 +1,2416 @@
+/** Mermaid2AIChat 样式 — Vercel Design System */
+
+/* === Vercel 色彩系统 === */
+:root {
+  /* === 色彩 === */
+  --color-bg: #ffffff;
+  --color-bg-muted: #f5f5f5;
+  --color-bg-card: #ffffff;
+  --color-bg-popover: #ffffff;
+  --color-text: #0a0a0a;
+  --color-text-muted: #858585;
+  --color-text-secondary: #525252;
+  --color-border: #e5e5e5;
+  --color-border-hover: #d4d4d4;
+  --color-primary: #171717;
+  --color-primary-hover: #0a0a0a;
+  --color-primary-foreground: #fafafa;
+  --color-secondary: #f5f5f5;
+  --color-secondary-hover: #e5e5e5;
+  --color-destructive: #e7000b;
+  --color-destructive-hover: #c5000a;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-info: #3b82f6;
+
+  /* === 间距 === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* === 圆角 === */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* === 阴影 === */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+  /* === 字体 === */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+
+  /* === 布局 === */
+  --toolbar-height: 40px;
+  --tabbar-height: 36px;
+  --left-panel-width: 220px;
+  --right-panel-width: 280px;
+  --panel-min-width: 180px;
+  --panel-max-width: 400px;
+
+  /* === 过渡 === */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+
+  /* === 节点 SVG 颜色 === */
+  --node-fill: #ffffff;
+  --node-stroke: #525252;
+  --node-text: #0a0a0a;
+  --node-selected-stroke: #3b82f6;
+  --focus-ring: 0 0 0 2px rgba(23, 23, 23, 0.1);
+
+  /* === 时序图 SVG 颜色（SequenceCanvas 专用，对齐 GraphCanvas 的 --node-* 模式） ===
+   * 颜色值从 sequence/ 目录 9 个渲染组件的原硬编码值提取，亮色保持视觉一致。
+   * SVG fill/stroke 属性形式不支持 var()，渲染组件统一用 style={{ fill: 'var(--xxx)' }}。
+   */
+
+  /* 画布背景 + 斑点（对齐 React Flow <Background/> Dots variant 视觉） */
+  --seq-canvas-bg: #fafafa;
+  --seq-canvas-dot: #d4d4d4;
+
+  /* 参与者（participant-row.tsx） */
+  --seq-participant-fill: #ffffff;
+  --seq-participant-stroke: #333333;
+  --seq-participant-text: #333333;
+  --seq-participant-selected-fill: #e6f7ff;
+  --seq-participant-selected-stroke: #1890ff;
+
+  /* 连接点（participant-row.tsx 顶部 circle，拖拽连线发起） */
+  --seq-connection-point-fill: #1890ff;
+  --seq-connection-point-stroke: #ffffff;
+
+  /* 消息（message-row.tsx） */
+  --seq-message-stroke: #333333;
+  --seq-message-selected-stroke: #1890ff;
+  --seq-message-text: #333333;
+  --seq-message-selected-text: #1890ff;
+
+  /* 拖拽排序手柄（message-row.tsx grip 6 圆点） */
+  --seq-grip-fill: #999999;
+  --seq-grip-selected-fill: #1890ff;
+
+  /* 生命线（lifeline.tsx） */
+  --seq-lifeline-stroke: #999999;
+  --seq-lifeline-selected-stroke: #1890ff;
+
+  /* 激活条（activation-bar.tsx） */
+  --seq-activation-fill: #e6f7ff;
+  --seq-activation-selected-fill: #1890ff;
+  --seq-activation-stroke: #1890ff;
+
+  /* 注释框（note-row.tsx） */
+  --seq-note-fill: #fffbe6;
+  --seq-note-fold-fill: #ffe58f;
+  --seq-note-stroke: #faad14;
+  --seq-note-selected-stroke: #1890ff;
+  --seq-note-text: #333333;
+
+  /* Box 分组（box-frame.tsx，box.color 提供时覆盖默认值） */
+  --seq-box-default-fill: rgba(24, 144, 255, 0.05);
+  --seq-box-default-stroke: #999999;
+  --seq-box-label-fill: #1890ff;
+  --seq-box-selected-stroke: #1890ff;
+  --seq-box-label-text: #ffffff;
+
+  /* 块类型 7 色（block-frame.tsx BLOCK_COLORS，critical/break 共用，par/par-over 共用） */
+  --seq-block-alt-fill: rgba(24, 144, 255, 0.06);
+  --seq-block-alt-stroke: #1890ff;
+  --seq-block-opt-fill: rgba(82, 196, 26, 0.06);
+  --seq-block-opt-stroke: #52c41a;
+  --seq-block-loop-fill: rgba(250, 173, 20, 0.06);
+  --seq-block-loop-stroke: #faad14;
+  --seq-block-par-fill: rgba(114, 46, 209, 0.06);
+  --seq-block-par-stroke: #722ed1;
+  --seq-block-critical-fill: rgba(245, 34, 45, 0.06);
+  --seq-block-critical-stroke: #f5222d;
+  --seq-block-rect-fill: rgba(19, 194, 194, 0.06);
+  --seq-block-rect-stroke: #13c2c2;
+  --seq-block-autonumber-fill: rgba(0, 0, 0, 0.04);
+  --seq-block-autonumber-stroke: #999999;
+  --seq-block-label-text: #ffffff;
+  --seq-block-selected-stroke: #1890ff;
+
+  /* 箭头 marker（arrow-markers.tsx，替代 DEFAULT_COLOR=#333 + stick stroke=black） */
+  --seq-arrow-color: #333333;
+
+  /* central-connection 圆形节点（central-connection-render.tsx） */
+  --seq-central-circle-fill: #333333;
+  --seq-central-circle-selected-fill: #1890ff;
+
+  /* 拖拽指示线（sequence-canvas.tsx drop indicator） */
+  --seq-drag-indicator-stroke: #1890ff;
+
+  /* 内联编辑器（sequence-canvas.tsx InlineEditor 浮层） */
+  --seq-inline-editor-bg: #ffffff;
+  --seq-inline-editor-shadow: rgba(0, 0, 0, 0.15);
+
+  /* MiniMap（minimap.tsx，仅展示，对齐 React Flow <MiniMap/> 视觉） */
+  --seq-minimap-bg: rgba(250, 250, 250, 0.8);
+  --seq-minimap-border: #d4d4d4;
+  --seq-minimap-bounds-fill: #ffffff;
+  --seq-minimap-bounds-stroke: #999999;
+  --seq-minimap-node-fill: #d6d6d8;
+  --seq-minimap-mask: rgba(100, 100, 100, 0.3);
+
+  /* classDiagram 专属变量（对齐 SequenceCanvas CSS 变量模式，M3 重构模块4 L2-1） */
+  /* class-box（4 分区：annotation/label/members/methods + 2 divider） */
+  --class-box-bg: #ffffff;
+  --class-box-stroke: #333333;
+  --class-box-text: #333333;
+  --class-box-header-bg: #f0f0f0;
+  --class-box-header-text: #1890ff;
+  --class-box-divider-stroke: #e0e0e0;
+  --class-box-annotation-text: #666666;
+  --class-box-member-text: #333333;
+  --class-box-method-text: #333333;
+  --class-box-selected-stroke: #1890ff;
+
+  /* class-note（折角矩形注释） */
+  --class-note-bg: #fffce8;
+  --class-note-stroke: #999999;
+  --class-note-text: #333333;
+  --class-note-fold-fill: #f0f0f0;
+  --class-note-selected-stroke: #1890ff;
+
+  /* class-namespace（Parent Node 容器） */
+  --class-namespace-bg: rgba(135, 131, 120, 0.05);
+  --class-namespace-stroke: #676767;
+  --class-namespace-text: #333333;
+  --class-namespace-header-bg: rgba(135, 131, 120, 0.15);
+  --class-namespace-selected-stroke: #1890ff;
+
+  /* class-edge（关系边 + 基数/标签） */
+  --class-edge-stroke: #333333;
+  --class-edge-selected-stroke: #1890ff;
+  --class-edge-label-bg: #ffffff;
+  --class-edge-label-text: #333333;
+
+  /* erDiagram 专属变量（对齐 SequenceCanvas / classDiagram CSS 变量模式，M4 重构模块4 L2-9） */
+  /* er-box（标题栏 + 4 列分栏属性区，对齐 class-box 模式） */
+  --er-box-bg: #ffffff;
+  --er-box-stroke: #333333;
+  --er-box-text: #333333;
+  --er-box-header-bg: #f0f0f0;
+  --er-box-header-text: #1890ff;
+  --er-box-alias-text: #666666;
+  --er-box-selected-stroke: #1890ff;
+
+  /* er 属性列文本 + 行交替背景（对齐官方 erRenderer attributeBoxOdd/attributeBoxEven） */
+  --er-attribute-type-text: #666666;
+  --er-attribute-comment-text: #999999;
+  --er-attribute-box-odd-bg: rgba(0, 0, 0, 0.02);
+  --er-attribute-box-even-bg: #ffffff;
+
+  /* er-subgraph（Parent Node 容器，对齐 class-namespace 模式） */
+  --er-subgraph-bg: rgba(135, 131, 120, 0.05);
+  --er-subgraph-stroke: #676767;
+  --er-subgraph-text: #333333;
+  --er-subgraph-header-bg: rgba(135, 131, 120, 0.15);
+  --er-subgraph-selected-stroke: #1890ff;
+
+  /* er-edge（关系边 + curveBasis + marker） */
+  --er-edge-stroke: #333333;
+  --er-edge-selected-stroke: #1890ff;
+  --er-edge-label-bg: #ffffff;
+  --er-edge-label-text: #333333;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  font-family: var(--font-sans);
+  /* 显式设置背景色，避免在 VSCode Webview 深色主题下透出宿主背景 */
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/*
+ * 宿主（web-editor / vscode webview）在 app-container 内再套一层 Canvas 的 app-container。
+ * 此时内层容器必须填满剩余空间，而不是再次占据整个视口高度，否则 TabBar 高度会导致页面滚动条。
+ */
+.app-container > .app-container {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-muted);
+  border-bottom: 1px solid var(--color-border);
+  height: var(--toolbar-height);
+  flex-shrink: 0;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.toolbar-label {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+.toolbar-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.toolbar-select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.toolbar-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+  text-align: center;
+}
+
+.toolbar-logo {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.5px;
+  user-select: none;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.toolbar-actions {
+  margin-left: auto;
+}
+
+/* Vercel ghost 风格按钮 */
+.toolbar-btn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.toolbar-btn:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-text);
+}
+
+/* 图表类型徽章 */
+.diagram-type-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-info);
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  line-height: 1.4;
+  user-select: none;
+}
+
+/* 主内容区 */
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 左侧面板 — 节点库 + 图专用面板 */
+.left-panel {
+  width: var(--left-panel-width);
+  min-width: var(--panel-min-width);
+  max-width: var(--panel-max-width);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-muted);
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 右侧面板 — 代码编辑器（上）+ 属性面板（下），M0 调整 */
+.right-panel {
+  width: var(--right-panel-width);
+  min-width: var(--panel-min-width);
+  max-width: var(--panel-max-width);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-muted);
+  border-left: 1px solid var(--color-border);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 代码编辑器 */
+.code-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+  min-height: 160px;
+  max-height: 50%;
+}
+
+.code-editor-title {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.code-editor-type-badge {
+  font-size: var(--text-xs);
+  color: var(--color-info);
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1px var(--space-2);
+  line-height: 1.4;
+}
+
+.code-editor-content {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  overflow: auto;
+  resize: none;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+.code-editor-error {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-destructive);
+  background: rgba(231, 0, 11, 0.1);
+  border-top: 1px solid rgba(231, 0, 11, 0.3);
+  flex-shrink: 0;
+  max-height: 60px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 节点库 */
+.node-library {
+  padding: var(--space-3);
+  overflow-y: auto;
+  flex-shrink: 0;
+  max-height: 50%;
+}
+
+.library-title {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.node-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: all var(--transition-fast);
+}
+
+.node-item:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-muted);
+}
+
+.node-icon {
+  font-size: var(--text-xl);
+  width: var(--space-6);
+  text-align: center;
+}
+
+.node-icon svg path {
+  fill: var(--node-fill) !important;
+  stroke: var(--node-stroke) !important;
+}
+
+.node-icon svg line,
+.node-icon svg circle,
+.node-icon svg rect,
+.node-icon svg ellipse,
+.node-icon svg polygon {
+  stroke: var(--node-stroke) !important;
+}
+
+.node-icon svg text {
+  fill: var(--node-stroke) !important;
+}
+
+.node-label {
+  color: var(--color-text);
+}
+
+/* 画布容器 */
+.canvas-container {
+  flex: 1;
+  position: relative;
+  background: var(--color-bg);
+}
+
+/* React Flow 画布根元素 — 显式浅色背景，避免透出宿主深色主题 */
+.canvas-container .react-flow {
+  background: var(--color-bg-muted);
+}
+
+/* 消费状态徽章 */
+.consumed-badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+}
+
+.status-empty {
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
+}
+
+.status-pending {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-consumed {
+  background: rgba(234, 179, 8, 0.1);
+  color: var(--color-warning);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.status-ai {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-time {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Vercel secondary 风格按钮 */
+.reset-button {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  transition: all var(--transition-fast);
+}
+
+.reset-button:hover {
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
+}
+
+/* 连接状态 */
+.connection-status {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-bg-popover);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  z-index: 10;
+}
+
+.status-dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: 50%;
+}
+
+/* 节点样式 */
+.mermaid-node {
+  cursor: move;
+}
+
+/* React Flow 12 默认层叠机制：不设置容器 z-index，避免破坏 EdgeWrapper 对子图内边的自动提升。
+   .react-flow__edges 和 .react-flow__nodes 均不创建独立 stacking context，
+   EdgeWrapper 给连接有 parent 节点的边设置的高 inline z-index 能直接在 viewport stacking context 内生效，
+   确保子图内边在 subgraph 节点之上渲染（不被 subgraph 不透明背景遮盖）。
+   详见 docs/design/subgraph-render-fix.md */
+
+/* 移除 React Flow 默认节点类型的多余外框（边框、背景、padding）
+   flowchart 使用 SVG 形状渲染，不需要 React Flow 的默认矩形框 */
+.react-flow__node-default,
+.react-flow__node-subgraph {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  line-height: normal !important;
+  overflow: visible !important;
+}
+
+/* subgraph 节点容器：pointer-events: none 让点击穿透到 edges 容器，
+   使子图内的边可点击。子节点（普通 .react-flow__node-default）保持默认
+   pointer-events: all，不受影响（子节点是 React Flow 平铺渲染，不嵌套在 subgraph DOM 内）。
+   标题栏单独设置 pointer-events: auto 保留 subgraph 选择/拖拽能力。
+   !important 用于覆盖 React Flow 在 .react-flow__node 上设置的 inline style pointer-events: all */
+.react-flow__node-subgraph {
+  pointer-events: none !important;
+}
+
+.mermaid-subgraph-title {
+  pointer-events: auto !important;
+}
+
+/* 注意: .mermaid-node.selected 不再使用 box-shadow（对非矩形形状显示为矩形外框）
+   selected 样式通过 ShapeRenderer 的 selected prop 应用到 SVG（stroke 加粗 + 颜色变更） */
+
+/* 形状容器：SVG 形状作为背景，HTML 标签绝对定位居中 */
+.mermaid-shape {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.mermaid-shape-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* 节点 SVG 形状默认颜色（通过 CSS 变量，支持暗色模式，覆盖 inline SVG 属性） */
+.mermaid-shape-svg path {
+  fill: var(--node-fill) !important;
+  stroke: var(--node-stroke) !important;
+}
+
+.mermaid-shape-svg line,
+.mermaid-shape-svg circle,
+.mermaid-shape-svg rect,
+.mermaid-shape-svg ellipse,
+.mermaid-shape-svg polygon {
+  stroke: var(--node-stroke) !important;
+}
+
+/* 节点标签：绝对定位居中，支持图标、图片和多行文本 */
+.mermaid-shape-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  color: var(--node-text) !important;
+  font-size: var(--text-base);
+}
+
+/* 图标/图片与第一行文字在同一行 */
+.mermaid-shape-label-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.mermaid-shape-label-line {
+  display: block;
+  line-height: 1.3;
+}
+
+.mermaid-shape-img {
+  max-width: var(--space-6);
+  max-height: var(--space-6);
+  object-fit: contain;
+}
+
+/* Handle 悬停显示：默认隐藏，鼠标悬停节点时显示 */
+.mermaid-node .react-flow__handle {
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.mermaid-node:hover .react-flow__handle,
+.mermaid-node.selected .react-flow__handle {
+  opacity: 1;
+}
+
+/* 边标签 */
+.edge-label {
+  cursor: pointer;
+}
+
+/* 边动画（dasharray 流动，对齐官方 animate true） */
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 属性面板 — 嵌套在 right-panel 中，M0 调整 */
+.property-panel {
+  flex: 1;
+  background: var(--color-bg-muted);
+  padding: var(--space-3);
+  overflow-y: auto;
+  flex-shrink: 1;
+}
+
+.panel-title {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.panel-hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.panel-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.panel-input,
+.panel-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.panel-input:focus,
+.panel-select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.panel-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* 样式编辑区 */
+.panel-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-color-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-color {
+  width: 32px;
+  height: var(--space-6);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--color-bg);
+}
+
+/* Vercel secondary 风格按钮 */
+.panel-reset-btn {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all var(--transition-fast);
+}
+
+.panel-reset-btn:hover {
+  background: var(--color-secondary-hover);
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
+}
+
+/* 成员/属性编辑块（classDiagram/erDiagram） */
+.panel-member {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-top: var(--space-2);
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+/* 复选框行（水平排列） */
+.panel-checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+/* 复选框组（多个复选框水平排列） */
+.panel-checkbox-group {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.info-label {
+  color: var(--color-text-muted);
+}
+
+.info-value {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* 内联编辑器覆盖层 */
+.inline-editor-overlay {
+  min-width: 200px;
+}
+
+/* 节点库自定义滚动条 */
+.node-library {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.node-library::-webkit-scrollbar {
+  width: 6px;
+}
+
+.node-library::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.node-library::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.node-library::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* === IconPicker M0 新增 === */
+.icon-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.icon-picker-search {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.icon-picker-search:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: var(--space-1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.icon-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  aspect-ratio: 1;
+}
+
+.icon-picker-item:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-muted);
+}
+
+.icon-picker-item.selected {
+  border-color: var(--color-primary);
+  background: var(--color-secondary);
+  box-shadow: var(--focus-ring);
+}
+
+.icon-picker-none {
+  font-size: var(--text-xl);
+  color: var(--color-text-muted);
+}
+
+.icon-picker-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* === TabBar 多标签页 === */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-bg-muted);
+  border-bottom: 1px solid var(--color-border);
+  min-height: var(--tabbar-height);
+  flex-shrink: 0;
+}
+
+.tab-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.tab-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-muted);
+  margin-right: var(--space-1);
+  transition: background var(--transition-fast);
+}
+
+.tab-group-header:hover {
+  background: var(--color-secondary-hover);
+}
+
+.tab-group-toggle {
+  font-size: 10px;
+  width: var(--space-3);
+  display: inline-block;
+  text-align: center;
+}
+
+.tab-group-label {
+  font-weight: 500;
+}
+
+.tab-group-count {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  max-width: 200px;
+  transition: all var(--transition-fast);
+}
+
+.tab-item:hover {
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-hover);
+}
+
+.tab-item-active {
+  background: var(--color-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.tab-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.tab-item-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-4);
+  height: var(--space-4);
+  padding: 0;
+  font-size: var(--text-base);
+  line-height: 1;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.tab-item-close:hover {
+  color: var(--color-destructive);
+  background: rgba(231, 0, 11, 0.1);
+}
+
+.tab-edit-input {
+  width: 140px;
+  padding: 2px var(--space-1);
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: var(--focus-ring);
+}
+
+.tab-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: var(--space-6);
+  padding: 0;
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: var(--space-1);
+  transition: all var(--transition-fast);
+}
+
+.tab-new:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  border-style: solid;
+}
+
+/* === 关闭确认模态对话框（替代 window.confirm） === */
+.tab-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.tab-modal {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg);
+}
+
+.tab-modal-message {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  margin-bottom: var(--space-4);
+}
+
+.tab-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.tab-modal-btn {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: all var(--transition-fast);
+}
+
+/* Vercel secondary 风格 */
+.tab-modal-cancel {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.tab-modal-cancel:hover {
+  background: var(--color-bg-muted);
+}
+
+/* Vercel primary 风格（黑底白字） */
+.tab-modal-confirm {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
+}
+
+.tab-modal-confirm:hover {
+  background: var(--color-primary-hover);
+}
+
+/* === 图表类型切换确认弹窗 === */
+.type-switch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.type-switch-dialog {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-width: 420px;
+  max-width: 560px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.type-switch-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.type-switch-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.type-switch-body {
+  padding: var(--space-5);
+}
+
+.type-switch-message {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.type-switch-warning {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-warning);
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+}
+
+.type-switch-footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.type-switch-btn {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+}
+
+.type-switch-btn-cancel:hover {
+  background: var(--color-bg-muted);
+}
+
+/* Vercel primary 风格（黑底白字） */
+.type-switch-btn-confirm {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.type-switch-btn-confirm:hover {
+  background: var(--color-primary-hover);
+}
+
+/* === 数据图表专用渲染器 === */
+
+/* 专用画布容器（替代 React Flow 的 canvas-container） */
+.specialized-canvas-container {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: auto;
+  position: relative;
+}
+
+/* 图表外层包装 */
+.specialized-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--space-4);
+  gap: var(--space-3);
+  overflow: auto;
+}
+
+/* 图表标题 */
+.specialized-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+  padding: var(--space-1) 0;
+}
+
+/* 可滚动容器（甘特图等需要横向滚动） */
+.specialized-scroll-container {
+  overflow: auto;
+  flex: 1;
+}
+
+/* === 编辑浮层（通用） === */
+.specialized-edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.specialized-edit-dialog {
+  background: var(--color-bg);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-lg);
+}
+
+.specialized-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* === 饼图 === */
+.pie-container {
+  display: flex;
+  gap: var(--space-6);
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pie-svg {
+  flex-shrink: 0;
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  min-width: 180px;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.pie-legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.pie-legend-label {
+  flex: 1;
+  color: var(--color-text);
+}
+
+.pie-legend-value {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.pie-legend-remove {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-lg);
+  line-height: 1;
+  padding: 0 var(--space-1);
+  transition: color var(--transition-fast);
+}
+
+.pie-legend-remove:hover {
+  color: var(--color-destructive);
+}
+
+.pie-add-btn {
+  margin-top: var(--space-2);
+  align-self: stretch;
+  text-align: center;
+}
+
+/* === 时间线 === */
+.timeline-container {
+  position: relative;
+  padding-left: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.timeline-axis {
+  position: absolute;
+  left: var(--space-3);
+  top: var(--space-2);
+  bottom: 60px;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.timeline-period {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  position: relative;
+}
+
+.timeline-marker {
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: var(--space-1);
+  margin-left: -23px;
+  border: 2px solid var(--color-bg);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.timeline-period-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.timeline-period-label {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.timeline-events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--color-border);
+}
+
+.timeline-event {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.timeline-event:hover {
+  background: var(--color-bg-muted);
+}
+
+.timeline-event-time {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.timeline-add-event {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+}
+
+.timeline-add-period {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
+/* === 四象限图 === */
+.quadrant-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.quadrant-svg {
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.quadrant-controls {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* === 坐标图 === */
+.xychart-container {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.xychart-svg {
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.xychart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  min-width: 140px;
+}
+
+.xychart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.xychart-legend-color {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.xychart-legend-label {
+  color: var(--color-text);
+}
+
+.xychart-legend-type {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+/* === 面板折叠按钮 === */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  z-index: 5;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  transition: background var(--transition-fast);
+}
+
+.panel-collapse-btn:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-text);
+}
+
+.panel-collapse-btn-left {
+  right: -16px;
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.panel-collapse-btn-right {
+  left: -16px;
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+/* 面板折叠状态 */
+.left-panel.collapsed,
+.right-panel.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+/* 面板拖拽手柄 */
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+  transition: background var(--transition-fast);
+}
+
+.panel-resize-handle:hover,
+.panel-resize-handle.active {
+  background: var(--color-info);
+}
+
+.panel-resize-handle-left {
+  right: -2px;
+}
+
+.panel-resize-handle-right {
+  left: -2px;
+}
+
+/* === 右键菜单 === */
+.context-menu {
+  position: fixed;
+  min-width: 160px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+  outline: none;
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  transition: background var(--transition-fast);
+}
+
+.context-menu-item:hover {
+  background: var(--color-bg-muted);
+}
+
+/* B4.3：子菜单箭头 + 图标布局 */
+.context-menu-item-icon {
+  display: inline-block;
+  width: 1em;
+  margin-right: var(--space-2);
+  text-align: center;
+}
+
+.context-menu-item-arrow {
+  margin-left: auto;
+  padding-left: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.context-menu-item[aria-haspopup="menu"] {
+  display: flex;
+  align-items: center;
+}
+
+.context-menu-item-danger {
+  color: var(--color-destructive);
+}
+
+.context-menu-item-danger:hover {
+  background: rgba(231, 0, 11, 0.1);
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-1) 0;
+}
+
+.context-menu-label {
+  padding: var(--space-1) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* === Toast === */
+.toast-container {
+  position: fixed;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.toast {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-lg);
+  animation: toast-in 0.2s ease;
+}
+
+.toast-success {
+  background: var(--color-success);
+}
+
+.toast-error {
+  background: var(--color-destructive);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === SequenceCanvas 错误边界降级 UI === */
+.sequence-canvas-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  padding: var(--space-6);
+  background: var(--color-bg-muted);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.sequence-canvas-error__icon {
+  font-size: 40px;
+  line-height: 1;
+  color: var(--color-warning);
+}
+
+.sequence-canvas-error__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sequence-canvas-error__message {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  max-width: 80%;
+  word-break: break-word;
+}
+
+.sequence-canvas-error__hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+}
+
+/* === 形状切换器 === */
+.shape-switcher {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.shape-switcher-title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.shape-switcher-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.shape-switcher-group-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.shape-switcher-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1);
+}
+
+.shape-switcher-item {
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  transition: all var(--transition-fast);
+}
+
+.shape-switcher-item:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-muted);
+}
+
+.shape-switcher-item-active {
+  border-color: var(--color-primary);
+  background: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+/* === 样式编辑器 === */
+.edge-style-editor,
+.style-editor {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.editor-section-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.editor-title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.editor-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast);
+}
+
+.editor-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.editor-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.editor-btn-primary {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--transition-fast);
+}
+
+.editor-btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.classdef-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  background: var(--color-bg);
+  transition: all var(--transition-fast);
+}
+
+.classdef-item-applied {
+  background: var(--color-secondary);
+  border-color: var(--color-border-hover);
+}
+
+.editor-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+/* === 暗色模式 === */
+.dark {
+  --color-bg: #0a0a0a;
+  --color-bg-muted: #171717;
+  --color-bg-card: #171717;
+  --color-bg-popover: #171717;
+  --color-text: #fafafa;
+  --color-text-muted: #a1a1a1;
+  --color-text-secondary: #d4d4d4;
+  --color-border: #262626;
+  --color-border-hover: #404040;
+  --color-primary: #fafafa;
+  --color-primary-hover: #ffffff;
+  --color-primary-foreground: #0a0a0a;
+  --color-secondary: #262626;
+  --color-secondary-hover: #404040;
+  --color-destructive: #ef4444;
+  --color-destructive-hover: #f87171;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-info: #60a5fa;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --focus-ring: 0 0 0 2px rgba(250, 250, 250, 0.15);
+  --node-fill: #1e1e1e;
+  --node-stroke: #a1a1a1;
+  --node-text: #fafafa;
+  --node-selected-stroke: #60a5fa;
+
+  /* === 时序图 SVG 颜色暗色覆盖 === */
+  --seq-canvas-bg: #171717;
+  --seq-canvas-dot: #404040;
+
+  --seq-participant-fill: #1e1e1e;
+  --seq-participant-stroke: #a1a1a1;
+  --seq-participant-text: #fafafa;
+  --seq-participant-selected-fill: rgba(96, 165, 250, 0.15);
+  --seq-participant-selected-stroke: #60a5fa;
+
+  --seq-connection-point-fill: #60a5fa;
+  --seq-connection-point-stroke: #0a0a0a;
+
+  --seq-message-stroke: #a1a1a1;
+  --seq-message-selected-stroke: #60a5fa;
+  --seq-message-text: #fafafa;
+  --seq-message-selected-text: #60a5fa;
+
+  --seq-grip-fill: #525252;
+  --seq-grip-selected-fill: #60a5fa;
+
+  --seq-lifeline-stroke: #525252;
+  --seq-lifeline-selected-stroke: #60a5fa;
+
+  --seq-activation-fill: rgba(96, 165, 250, 0.15);
+  --seq-activation-selected-fill: #60a5fa;
+  --seq-activation-stroke: #60a5fa;
+
+  --seq-note-fill: rgba(250, 204, 21, 0.15);
+  --seq-note-fold-fill: rgba(250, 204, 21, 0.3);
+  --seq-note-stroke: #facc15;
+  --seq-note-selected-stroke: #60a5fa;
+  --seq-note-text: #fafafa;
+
+  --seq-box-default-fill: rgba(96, 165, 250, 0.08);
+  --seq-box-default-stroke: #525252;
+  --seq-box-label-fill: #60a5fa;
+  --seq-box-selected-stroke: #60a5fa;
+  --seq-box-label-text: #0a0a0a;
+
+  --seq-block-alt-fill: rgba(96, 165, 250, 0.1);
+  --seq-block-alt-stroke: #60a5fa;
+  --seq-block-opt-fill: rgba(74, 222, 128, 0.1);
+  --seq-block-opt-stroke: #4ade80;
+  --seq-block-loop-fill: rgba(250, 204, 21, 0.1);
+  --seq-block-loop-stroke: #facc15;
+  --seq-block-par-fill: rgba(167, 139, 250, 0.1);
+  --seq-block-par-stroke: #a78bfa;
+  --seq-block-critical-fill: rgba(248, 113, 113, 0.1);
+  --seq-block-critical-stroke: #f87171;
+  --seq-block-rect-fill: rgba(45, 212, 191, 0.1);
+  --seq-block-rect-stroke: #2dd4bf;
+  --seq-block-autonumber-fill: rgba(255, 255, 255, 0.05);
+  --seq-block-autonumber-stroke: #525252;
+  --seq-block-label-text: #fafafa;
+  --seq-block-selected-stroke: #60a5fa;
+
+  --seq-arrow-color: #a1a1a1;
+
+  --seq-central-circle-fill: #a1a1a1;
+  --seq-central-circle-selected-fill: #60a5fa;
+
+  --seq-drag-indicator-stroke: #60a5fa;
+
+  --seq-inline-editor-bg: #1e1e1e;
+  --seq-inline-editor-shadow: rgba(0, 0, 0, 0.5);
+
+  --seq-minimap-bg: rgba(23, 23, 23, 0.8);
+  --seq-minimap-border: #404040;
+  --seq-minimap-bounds-fill: #171717;
+  --seq-minimap-bounds-stroke: #525252;
+  --seq-minimap-node-fill: #404040;
+  --seq-minimap-mask: rgba(0, 0, 0, 0.4);
+
+  /* classDiagram 暗色覆盖（M3 重构模块4 L2-1） */
+  --class-box-bg: #1f1f1f;
+  --class-box-stroke: #cccccc;
+  --class-box-text: #e0e0e0;
+  --class-box-header-bg: #2a2a2a;
+  --class-box-header-text: #69c0ff;
+  --class-box-divider-stroke: #444444;
+  --class-box-annotation-text: #999999;
+  --class-box-member-text: #e0e0e0;
+  --class-box-method-text: #e0e0e0;
+  --class-box-selected-stroke: #69c0ff;
+
+  --class-note-bg: #3d3a2a;
+  --class-note-stroke: #888888;
+  --class-note-text: #e0e0e0;
+  --class-note-fold-fill: #2a2820;
+  --class-note-selected-stroke: #69c0ff;
+
+  --class-namespace-bg: rgba(135, 131, 120, 0.1);
+  --class-namespace-stroke: #aaaaaa;
+  --class-namespace-text: #e0e0e0;
+  --class-namespace-header-bg: rgba(135, 131, 120, 0.2);
+  --class-namespace-selected-stroke: #69c0ff;
+
+  --class-edge-stroke: #cccccc;
+  --class-edge-selected-stroke: #69c0ff;
+  --class-edge-label-bg: #1f1f1f;
+  --class-edge-label-text: #e0e0e0;
+
+  /* erDiagram 暗色变量（对齐 class-box 暗色映射，M4 重构模块4 L2-9） */
+  --er-box-bg: #1f1f1f;
+  --er-box-stroke: #cccccc;
+  --er-box-text: #e0e0e0;
+  --er-box-header-bg: #2a2a2a;
+  --er-box-header-text: #69c0ff;
+  --er-box-alias-text: #aaaaaa;
+  --er-box-selected-stroke: #69c0ff;
+
+  --er-attribute-type-text: #aaaaaa;
+  --er-attribute-comment-text: #888888;
+  --er-attribute-box-odd-bg: rgba(255, 255, 255, 0.03);
+  --er-attribute-box-even-bg: #1f1f1f;
+
+  --er-subgraph-bg: rgba(135, 131, 120, 0.1);
+  --er-subgraph-stroke: #aaaaaa;
+  --er-subgraph-text: #e0e0e0;
+  --er-subgraph-header-bg: rgba(135, 131, 120, 0.2);
+  --er-subgraph-selected-stroke: #69c0ff;
+
+  --er-edge-stroke: #cccccc;
+  --er-edge-selected-stroke: #69c0ff;
+  --er-edge-label-bg: #1f1f1f;
+  --er-edge-label-text: #e0e0e0;
+}
+
+/* 暗色模式下 React Flow 画布背景 */
+.dark .react-flow__background {
+  --xy-background-color: #171717;
+  --xy-dot-color: #404040;
+}
+
+/* 暗色模式下节点 SVG 颜色（通过 CSS 变量控制） */
+
+/* 暗色模式下 React Flow MiniMap */
+.dark .react-flow__minimap {
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* 暗色模式下 React Flow Controls */
+.dark .react-flow__controls {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.dark .react-flow__controls-button {
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  fill: var(--color-text-secondary);
+}
+
+.dark .react-flow__controls-button:hover {
+  background: var(--color-bg-muted);
+}
+
+/* 暗色模式下 React Flow Edge */
+.dark .react-flow__edge-path {
+  stroke: var(--color-text-muted);
+}
+
+.dark .react-flow__edge.selected .react-flow__edge-path,
+.dark .react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--color-primary);
+}
+
+/* 暗色模式下 select 下拉框 option 背景 */
+.dark select option {
+  background: var(--color-bg-card);
+  color: var(--color-text);
+}
+
+/* 暗色模式下 scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: var(--color-bg-muted);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* 暗色模式下 inline-editor */
+.dark .inline-editor {
+  background: var(--color-bg-card);
+  border-color: var(--color-primary);
+}
+
+/* 暗色模式下 modal overlay */
+.dark .tab-modal-overlay,
+.dark .type-switch-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* 暗色模式下 toast */
+.dark .toast {
+  box-shadow: 0 0 0 1px var(--color-border), var(--shadow-lg);
+}
+
+/* 暗色模式下 React Flow attribution */
+.dark .react-flow__attribution {
+  background: var(--color-bg-muted);
+}
+
+.dark .react-flow__attribution a {
+  color: var(--color-text-muted);
+}
+
+/* 暗色模式下所有 form 元素 */
+.dark input,
+.dark textarea,
+.dark select {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* === 时序图专用样式（SequenceCanvas，非 React Flow） ===
+ * SequenceCanvas 用原生 SVG 渲染，不依赖 React Flow 的 .react-flow__* 类。
+ * 此处定义时序图专属的容器和元素样式，颜色通过 --seq-* CSS 变量控制（支持暗色模式）。
+ */
+
+/* SequenceMiniMap 容器：绝对定位右下角浮层，pointer-events:none 实现"仅展示" */
+.seq-minimap-container {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  width: 150px;
+  height: 100px;
+  background: var(--seq-minimap-bg);
+  border: 1px solid var(--seq-minimap-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  pointer-events: none; /* 仅展示，不响应点击/拖拽，对齐用户决策 */
+  overflow: hidden;
+  z-index: 5;
+}
+
+/* === Sequence 画布左下角帮助面板（B4.4 UI 帮助说明扩展） ===
+ * 折叠态：40x40 圆形「?」按钮
+ * 展开态：280px 宽面板，最大 70vh 高，可滚动
+ * 位置：absolute, left/bottom 10px（与右下角 minimap 对称）
+ */
+
+/* 折叠态容器 */
+.seq-help-panel-collapsed {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 10;
+}
+
+/* 折叠态「?」圆形按钮 */
+.seq-help-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--seq-minimap-border);
+  background: var(--seq-minimap-bg);
+  color: var(--seq-text-color, #333);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: background 0.15s, transform 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+.seq-help-toggle:hover {
+  background: var(--seq-minimap-border, #d0d0d0);
+  transform: scale(1.05);
+}
+.seq-help-toggle:focus-visible {
+  outline: 2px solid var(--seq-minimap-border, #4a90e2);
+  outline-offset: 2px;
+}
+
+/* 展开态容器 */
+.seq-help-panel-expanded {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  width: 300px;
+  max-height: 70vh;
+  background: var(--seq-minimap-bg);
+  border: 1px solid var(--seq-minimap-border);
+  border-radius: var(--radius-md, 6px);
+  box-shadow: var(--shadow-lg, var(--shadow-md));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 展开态头部（标题 + 关闭按钮） */
+.seq-help-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--seq-minimap-border);
+  background: var(--seq-minimap-border, rgba(0, 0, 0, 0.05));
+}
+.seq-help-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--seq-text-color, #333);
+}
+.seq-help-close {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--seq-text-color, #666);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+  transition: background 0.15s;
+}
+.seq-help-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+.seq-help-close:focus-visible {
+  outline: 2px solid var(--seq-minimap-border, #4a90e2);
+  outline-offset: 1px;
+}
+
+/* 展开态内容区（可滚动） */
+.seq-help-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+}
+
+/* 帮助分类 */
+.seq-help-section {
+  margin-top: 10px;
+}
+.seq-help-section:first-child {
+  margin-top: 0;
+}
+.seq-help-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--seq-text-color, #444);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--seq-minimap-border, rgba(0, 0, 0, 0.1));
+}
+
+/* 帮助条目列表 */
+.seq-help-entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.seq-help-entry {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  gap: 2px;
+}
+.seq-help-entry-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--seq-text-color, #222);
+}
+.seq-help-entry-desc {
+  font-size: 11px;
+  color: var(--seq-text-color, #666);
+  line-height: 1.4;
+}
+
+/* 暗色模式适配（跟随 .dark 覆盖） */
+.dark .seq-help-toggle,
+.dark .seq-help-panel-expanded,
+.dark .seq-help-panel-header {
+  background: var(--seq-minimap-bg);
+  color: var(--seq-text-color, #eee);
+}
+.dark .seq-help-toggle:hover,
+.dark .seq-help-panel-header {
+  background: var(--seq-minimap-border, rgba(255, 255, 255, 0.1));
+}
+.dark .seq-help-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* === classDiagram 专用样式（M3 重构模块4 L2-1） ===
+ * classDiagram 节点/边组件颜色通过 --class-* CSS 变量控制（支持暗色模式）。
+ * classifier 作为 CSS 样式（对齐官方 classBox：italic=abstract, underline=static）。
+ */
+
+/* classifier CSS 样式（非文本后缀，对齐官方 classBox 渲染标准） */
+.class-member-abstract {
+  font-style: italic;
+}
+.class-member-static {
+  text-decoration: underline;
+}
+
+/* === erDiagram 专用样式（M4 重构模块4 L2-9） ===
+ * erDiagram 节点/边组件颜色通过 --er-* CSS 变量控制（支持暗色模式）。
+ * 行交替背景对齐官方 erRenderer attributeBoxOdd/attributeBoxEven。
+ */
+
+/* er-box 属性行交替背景（对齐官方 erRenderer attributeBoxOdd/attributeBoxEven） */
+.er-attribute-box-odd {
+  background: var(--er-attribute-box-odd-bg);
+}
+.er-attribute-box-even {
+  background: var(--er-attribute-box-even-bg);
+}
+

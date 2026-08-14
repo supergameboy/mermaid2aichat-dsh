@@ -1,0 +1,133 @@
+.panel {
+  /* 浮层为 click-through，面板自身恢复指针事件 */
+  pointer-events: auto;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  width: clamp(440px, 44vw, 780px);
+  background: var(--dsw-specific-sidebar-fill, #ffffff);
+  border-left: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.18);
+  font-family: inherit;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  height: 44px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));
+  background: var(--dsw-specific-sidebar-fill, #fafafa);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #3b6ef6;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary, #111);
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  font-size: 11px;
+  color: var(--dsw-alias-label-secondary, #555);
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.action {
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: #3b6ef6;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.action:hover:not(:disabled) {
+  background: #2f5bd8;
+}
+
+.action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #555);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+  color: var(--dsw-alias-label-primary, #111);
+}
+
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 编辑器根容器铺满面板主体（覆盖 styles.css 的 height:100vh，面板头占 44px） */
+.body :global(.app-container) {
+  height: 100%;
+}
+
+.body > :first-child {
+  height: 100%;
+}
+
+/* 暗色模式下面板自身配色（编辑器内部样式由 styles.css 的 .dark 规则接管） */
+:global(.dark).panel {
+  background: #1e1f24;
+  border-left-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark).panel .header {
+  background: #17181c;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark).panel .title {
+  color: #e8e8ea;
+}
+
+:global(.dark).panel .badge,
+:global(.dark).panel .close {
+  color: #b8b8c0;
+  border-color: rgba(255, 255, 255, 0.14);
+}

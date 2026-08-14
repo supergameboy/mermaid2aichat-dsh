@@ -1,0 +1,64 @@
+{
+  "name": "mermaid2aichat-dsh",
+  "version": "0.1.0",
+  "description": "Mermaid 反向编辑器 — DeepSeek Harness 浏览器插件：在 Web 前端右侧提供可关闭的编辑器面板，支持 flowchart / sequenceDiagram / classDiagram / erDiagram 四种图表类型的可视化编辑与 Mermaid 代码双向同步",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "watch": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run build"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.3.0",
+    "dagre-cluster-fix": "^0.9.3",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "lightningcss": "^1.25.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tsdown": "^0.13.0",
+    "typescript": "^5.5.0"
+  },
+  "packageManager": "pnpm@10.16.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "mermaid",
+    "diagram",
+    "editor",
+    "plugin"
+  ]
+}
