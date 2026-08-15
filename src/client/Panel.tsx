@@ -14,7 +14,7 @@
  * - state 整值持久化到 localStorage，面板重开自动恢复
  * - 对话代码块源（blocks.ts）响应式更新，工具块自动导入、消息块提示手动导入
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '../editor/index.js'
 import { TypeSwitchDialog, ToastContainer } from '../editor/index.js'
 import { showToast } from '../editor/components/toast.js'
@@ -65,9 +65,22 @@ export interface MermaidPanelProps {
   sendToChat: (code: string, sessionId: string) => Promise<void>
   /** 手动重扫对话代码块（面板挂载时触发，兜底会话绑定时序）。 */
   rescanBlocks: () => void
+  /** 打开右侧 details 列给编辑器让位（聊天区自动缩宽）。 */
+  layoutOpen: () => void
+  /** 关闭右侧 details 列。 */
+  layoutClose: () => void
 }
 
-export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlocks, sendToChat, rescanBlocks }: MermaidPanelProps) {
+export function MermaidPanel({
+  useMermaid,
+  mermaidActions,
+  useSessions,
+  useBlocks,
+  sendToChat,
+  rescanBlocks,
+  layoutOpen,
+  layoutClose,
+}: MermaidPanelProps) {
   const open = useMermaid((s) => s.open)
   const maximized = useMermaid((s) => s.maximized)
   const darkMode = useMermaid((s) => s.darkMode)
@@ -82,6 +95,8 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
   const [pendingSwitch, setPendingSwitch] = useState<DiagramType | null>(null)
   const [sending, setSending] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  // 右侧 details 列的实测宽度（编辑器停靠其上，随列宽同步）
+  const [columnWidth, setColumnWidth] = useState<number | null>(null)
 
   // 挂载时重扫：应用 UI 稳定后会话 binding 必然可用（补 boot 时序竞态），
   // 让启动前已有的 mermaid_load 调用（仍在消息窗口内）也能被导入。
@@ -90,6 +105,40 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
     const delayed = setTimeout(rescanBlocks, 2000)
     return () => { clearTimeout(delayed) }
   }, [rescanBlocks])
+
+  // 停靠布局：观测 details 列宽度并同步编辑器宽度。
+  // 结构锚点：shell 浮层容器（data-shell-overlay）的父节点是 AppFrame，
+  // 其子节点顺序为 [sidebar, center, details, overlay]。
+  useEffect(() => {
+    const overlayLayer = document.querySelector('[data-shell-overlay]')
+    const frame = overlayLayer?.parentElement ?? null
+    const detailsCol = frame !== null && frame.children.length >= 4 ? frame.children[2] : null
+    if (detailsCol === null) return
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width
+      setColumnWidth(width ?? 0)
+    })
+    observer.observe(detailsCol)
+    return () => { observer.disconnect() }
+  }, [])
+
+  // 让位控制：编辑器打开时保持 details 列打开（用户/会话切换关闭它时重新打开），
+  // 关闭编辑器时只在"打开→关闭"跳变上收起列（不打扰用户手动打开的详情）。
+  const openRef = useRef(open)
+  useEffect(() => {
+    const wasOpen = openRef.current
+    openRef.current = open
+    if (open && !wasOpen) {
+      layoutOpen()
+    } else if (!open && wasOpen) {
+      layoutClose()
+    }
+  }, [open, layoutOpen, layoutClose])
+  // 编辑器打开期间，details 列被外部关闭（会话切换/详情×按钮）时重新打开。
+  useEffect(() => {
+    if (!open) return
+    if (columnWidth !== null && columnWidth < 8) layoutOpen()
+  }, [open, columnWidth, layoutOpen])
 
   // 当前会话的标签集合（未物化时用占位）
   const sessionViews: MermaidSessionViews = sessionId !== undefined && sessions[sessionId] !== undefined
@@ -217,8 +266,14 @@ export function MermaidPanel({ useMermaid, mermaidActions, useSessions, useBlock
     maximized ? css.maximized : '',
   ].filter(Boolean).join(' ')
 
+  // 宽度停靠 details 列：列宽未观测到时用契约默认值，最大化时铺满页面
+  const panelWidth = maximized ? '100vw' : `${columnWidth ?? 360}px`
+
   return (
-    <div className={panelClass} data-mermaid-panel>
+    <div className={panelClass} data-mermaid-panel style={{ width: panelWidth }}>
+      {/* 调整宽度把手：指针穿透到 DSH details 列的拖拽把手（8px 命中条），
+          拖动即调整编辑器宽度与聊天区让位宽度 */}
+      {!maximized && <div className={css.resizeStrip} aria-hidden="true" />}
       <header className={css.header}>
         <span className={css.logo} title="Mermaid 反向编辑器">M2A</span>
         <span className={css.title}>Mermaid 反向编辑器</span>

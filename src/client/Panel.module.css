@@ -8,7 +8,8 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  width: clamp(460px, 50vw, 900px);
+  /* 兜底宽度（实际宽度由 details 列同步，见 Panel.tsx 的 inline style） */
+  width: 360px;
   background: var(--dsw-specific-sidebar-fill, #ffffff);
   border-left: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
   box-shadow: -12px 0 32px rgba(0, 0, 0, 0.18);
@@ -21,6 +22,41 @@
   width: 100vw;
   border-left: none;
   box-shadow: none;
+}
+
+/* 调整宽度把手：指针穿透（pointer-events:none）到 DSH details 列的拖拽把手，
+   仅绘制居中 pill 视觉提示 */
+.resizeStrip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  width: 8px;
+  z-index: 70;
+  pointer-events: none;
+  cursor: col-resize;
+}
+
+.resizeStrip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 32px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  background: var(--dsw-alias-button-floating-fill, #ffffff);
+  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.14));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  opacity: 0.7;
+  transition: opacity var(--ds-transition-duration-slow, 160ms) ease;
+}
+
+.panel:hover .resizeStrip::after {
+  opacity: 1;
+  background: var(--dsw-alias-button-floating-hover, #f2f3f5);
 }
 
 .header {

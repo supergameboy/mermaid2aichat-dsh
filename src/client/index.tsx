@@ -20,8 +20,8 @@ import { MermaidPanel } from './Panel.js'
 /** 插件名（诊断用）。 */
 export const name = 'mermaid2aichat-dsh'
 
-/** 硬依赖：槽位服务、会话服务与输入触发服务均由 web 组合提供。 */
-export const inject = ['slots', 'sessions', 'inputTriggers']
+/** 硬依赖：槽位服务、会话服务、输入触发服务与布局服务均由 web 组合提供。 */
+export const inject = ['slots', 'sessions', 'inputTriggers', 'layout']
 
 /** 输入触发源的最小面（ui-input-trigger 提供）。 */
 interface InputTriggerCandidate {
@@ -75,6 +75,9 @@ export function apply(ctx: Context): void {
         hooks: { blocks: blocks.source, mermaid: mermaid.source },
         mermaidActions: mermaid.actions,
         rescanBlocks: blocks.rescan,
+        // 聊天区让位：编辑器打开时占用右侧 details 列（聊天自动缩宽）
+        layoutOpen: () => { ctx.layout.openDetails() },
+        layoutClose: () => { ctx.layout.closeDetails() },
         sendToChat: async (code: string, sessionId: string): Promise<void> => {
           // 直接走 SessionFace.prompt（ConversationController.send 的内部路径），
           // 避免 scope 寻址属性代理在 scope fiber 上抛 inject 守卫错误。
