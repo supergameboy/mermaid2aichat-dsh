@@ -10,7 +10,7 @@
  *           CodeEditor 不显示类型切换提示——类型不一致是用户编辑代码的自然现象，无需额外提示。
  */
 import { useState, useEffect, useRef, memo } from 'react';
-import { type DiagramType, type FlowchartDirection, isGraphDiagramType } from '@mermaid2aichat/serializer';
+import { type DiagramType, type FlowchartDirection, isGraphDiagramType, DIAGRAM_TYPES } from '@mermaid2aichat/serializer';
 import type { ConnectionMode } from '../nodes/flowchart/index.js';
 import { showToast } from './toast.js';
 
@@ -34,30 +34,6 @@ interface CodeEditorProps {
   /** 连线模式切换回调（仅图结构类型渲染） */
   onConnectionModeChange?: (mode: ConnectionMode) => void;
 }
-
-/** 图表类型中文标签 */
-const DIAGRAM_TYPE_LABELS: Record<DiagramType, string> = {
-  flowchart: '流程图',
-  sequenceDiagram: '时序图',
-  classDiagram: '类图',
-  erDiagram: 'ER图',
-  stateDiagram: '状态图',
-  mindmap: '思维导图',
-  architecture: '架构图',
-  gantt: '甘特图',
-  pie: '饼图',
-  timeline: '时间线',
-  quadrantChart: '四象限图',
-  xychart: '坐标图',
-};
-
-/** 本插件支持的图表类型（仅四种已迁移类型） */
-const SUPPORTED_DIAGRAM_TYPES: DiagramType[] = [
-  'flowchart',
-  'sequenceDiagram',
-  'classDiagram',
-  'erDiagram',
-];
 
 const DIRECTIONS: FlowchartDirection[] = ['TB', 'TD', 'BT', 'RL', 'LR'];
 
@@ -158,8 +134,10 @@ export const CodeEditor = memo(function CodeEditor({
               className="code-editor-select"
               title="切换图表类型"
             >
-              {SUPPORTED_DIAGRAM_TYPES.map((t) => (
-                <option key={t} value={t}>{DIAGRAM_TYPE_LABELS[t]}</option>
+              {DIAGRAM_TYPES.map((info) => (
+                <option key={info.type} value={info.type} disabled={!info.implemented}>
+                  {info.label}{info.implemented ? '' : '（开发中）'}
+                </option>
               ))}
             </select>
           )}

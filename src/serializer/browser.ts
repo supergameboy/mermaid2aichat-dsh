@@ -212,6 +212,11 @@ export { detectCycle } from './serializer/shared/graph-helpers.js';
 export { serializeMermaid, detectDiagramType } from './serialize-dispatcher.js';
 
 // ============================================================
+// 图表类型注册表（12 种统一元数据：标签/编辑族/实现状态）
+// ============================================================
+export { DIAGRAM_TYPES, IMPLEMENTED_DIAGRAM_TYPES, diagramTypeInfo } from './diagram-registry.js';
+export type { DiagramTypeInfo, DiagramFamily } from './diagram-registry.js';
+// ============================================================
 // jison 解析器导出（浏览器安全 — 静态 import ESM）
 // ============================================================
 export {

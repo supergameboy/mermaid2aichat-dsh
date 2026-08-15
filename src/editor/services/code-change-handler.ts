@@ -23,6 +23,7 @@
 import {
   detectDiagramType,
   createEmptyCanvasState,
+  diagramTypeInfo,
   type CanvasState,
   type DiagramType,
   type ParseError,
@@ -86,6 +87,13 @@ export function createCodeChangeHandler(
       ? newCanvas.diagramType
       : detectDiagramType(code);
     if (targetType && targetType !== currentType) {
+      // 未实现的类型不直切：解析失败的代码首行指向开发中的类型时，
+      // 保留当前画布并显示开发中错误（直切会让渲染器收到无法处理的状态而崩溃）。
+      const targetInfo = diagramTypeInfo(targetType);
+      if (targetInfo !== undefined && !targetInfo.implemented) {
+        setCodeError(`图表类型 "${targetType}"（${targetInfo.label}）正在开发中，暂不支持（计划见 PLAN.md）`);
+        return;
+      }
       setCodeError(null);
       // 解析成功：保留解析结果（含 rawCode）；解析失败：空 canvas + rawCode（保留用户代码）
       const canvasToEmit: CanvasState = result.success

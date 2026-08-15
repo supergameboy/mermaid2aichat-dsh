@@ -23,6 +23,7 @@ import type {
 } from './types.js';
 import { assemble } from './assembler/index.js';
 import { serializeSequence } from './serializer/sequence/index.js';
+import { diagramTypeInfo } from './diagram-registry.js';
 
 // detectDiagramType 从 detector 模块重新导出（保持向后兼容）
 export { detectDiagramType } from './detector/index.js';
@@ -60,15 +61,18 @@ export function serializeMermaid(canvas: CanvasState): SerializeResult {
     case 'sequenceDiagram':
       return serializeSequence(canvas);
     default: {
-      // Only the four migrated diagram types can serialize; the UI never
-      // produces other states, but a hand-fed state fails loudly as an error result.
-      const type = (canvas as { diagramType: string }).diagramType;
+      // 注册表驱动：计划内未实现的类型给出「开发中」错误，其余按未知处理。
+      const type = (canvas as { diagramType: string }).diagramType as Parameters<typeof diagramTypeInfo>[0];
+      const info = diagramTypeInfo(type);
+      const message = info !== undefined && !info.implemented
+        ? `图表类型 "${type}"（${info.label}）正在开发中，暂不支持序列化（计划见 PLAN.md）`
+        : `无法识别的图表类型 "${type}"`;
       return {
         mermaid: '',
         errors: [{
           line: 0,
           column: 0,
-          message: `不支持的图表类型 "${type}"（本插件仅支持 flowchart / sequenceDiagram / classDiagram / erDiagram）`,
+          message,
           severity: 'error',
         }],
       };

@@ -36,6 +36,7 @@ import {
 } from './parser/jison-error.js';
 import { extractFrontmatterTitle } from './detector/preprocessor.js';
 import { parseSequence } from './parser/sequence/sequence-parser.js';
+import { diagramTypeInfo } from './diagram-registry.js';
 
 /** 构造解析失败结果 */
 function buildParseFailure(message: string, code: string): ParseResult {
@@ -157,9 +158,16 @@ export function parseMermaid(code: string, options?: ParseMermaidOptions): Parse
       result = parseSequence(code);
       break;
     default:
-      // This plugin supports only the four migrated diagram types; a detected
-      // type outside that set is reported as a parse failure instead of a throw.
-      return buildParseFailure(`不支持的图表类型 "${diagramType}"（本插件仅支持 flowchart / sequenceDiagram / classDiagram / erDiagram）`, code);
+      // 注册表驱动：已实现类型走各自路径；计划内但未实现的类型给出明确的
+      // 「开发中」解析失败（不崩溃、不静默）；未知类型给通用失败。
+      const info = diagramTypeInfo(diagramType);
+      if (info !== undefined && !info.implemented) {
+        return buildParseFailure(
+          `图表类型 "${diagramType}"（${info.label}）正在开发中，暂不支持解析（计划见 PLAN.md）`,
+          code,
+        );
+      }
+      return buildParseFailure(`无法识别的图表类型 "${diagramType}"`, code);
   }
 
   // 为成功的解析结果填充 rawCode（保留原始代码用于增量序列化）
