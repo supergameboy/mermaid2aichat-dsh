@@ -85,12 +85,8 @@ export interface CanvasProps {
   onDirectionChange: (dir: FlowchartDirection) => void;
   /** 视口变化回调（用户平移/缩放触发） */
   onViewportChange: (viewport: Viewport) => void;
-  /** 图表类型切换回调（用户通过 Toolbar 下拉或代码编辑器首行修改触发）
+  /** 图表类型切换回调（用户通过代码区下拉选择器或代码编辑器首行修改触发）
    * 外部负责弹窗确认 + 构造新类型 CanvasState + 发送到服务端
    */
   onDiagramTypeChange?: (newType: DiagramType) => void;
-  /** 当前是否为暗色模式 */
-  darkMode?: boolean;
-  /** 切换暗色模式回调 */
-  onDarkModeToggle?: () => void;
 }

@@ -7,7 +7,7 @@ React Flow 画布组件库，提供 Mermaid 各图表类型的可视化渲染和
 ## 文件命名规则
 
 - 画布组件：`{type}-canvas.tsx`（如 `graph-canvas.tsx`、`gantt-canvas.tsx`）
-- 通用组件：`components/{name}.tsx`（如 `property-panel.tsx`、`tab-bar.tsx`、`toolbar.tsx`）
+- 通用组件：`components/{name}.tsx`（如 `property-panel.tsx`、`tab-bar.tsx`、`code-editor.tsx`）
 - 图表类型组件：`components/{diagramType}/`（如 `components/flowchart/`、`components/sequence/`）
 - 节点组件：`nodes/{diagramType}/`
 - 边组件：`edges/{diagramType}/`

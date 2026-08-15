@@ -142,3 +142,53 @@
 .confirm:hover {
   background: #b83333;
 }
+
+/* 暗色模式：跟随面板根节点的 dark 类（data-mermaid-panel 限定作用域，
+   避免误中宿主全局主题的 dark 类） */
+:global(.dark[data-mermaid-panel]) .bar {
+  background: #17181c;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark[data-mermaid-panel]) .tab {
+  color: #b8b8c0;
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark[data-mermaid-panel]) .tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark[data-mermaid-panel]) .active {
+  background: #26272c;
+  color: #e8e8ea;
+}
+
+:global(.dark[data-mermaid-panel]) .close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark[data-mermaid-panel]) .editInput {
+  background: #17181c;
+  color: #e8e8ea;
+}
+
+:global(.dark[data-mermaid-panel]) .new {
+  color: #b8b8c0;
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark[data-mermaid-panel]) .new:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8ea;
+}
+
+:global(.dark[data-mermaid-panel]) .modal {
+  background: #1e1f24;
+  color: #e8e8ea;
+}
+
+:global(.dark[data-mermaid-panel]) .cancel {
+  color: #d8d8de;
+  border-color: rgba(255, 255, 255, 0.16);
+}

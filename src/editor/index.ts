@@ -11,7 +11,6 @@ export { GraphCanvas } from './graph-canvas.js';
 export type { GraphCanvasProps } from './graph-canvas.js';
 export { SequenceCanvas } from './sequence/sequence-canvas.js';
 export type { SequenceCanvasProps } from './sequence/sequence-canvas.js';
-export { Toolbar, SUPPORTED_DIAGRAM_TYPES } from './components/toolbar.js';
 export { NodeLibrary } from './components/node-library.js';
 export { getTemplatesForDiagramType, getTemplate, isTemplateSupported, NODE_TEMPLATES } from './components/node-templates.js';
 export type { NodeTemplate } from './components/node-templates.js';

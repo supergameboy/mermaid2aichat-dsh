@@ -42,7 +42,6 @@ import {
 import type { CanvasProps } from '../types.js';
 import { idGenerator, createCodeChangeHandler } from '../services/index.js';
 import { useCanvasServices } from '../hooks/use-canvas-services.js';
-import { Toolbar } from '../components/toolbar.js';
 import { NodeLibrary } from '../components/node-library.js';
 import { CodeEditor } from '../components/code-editor.js';
 import { InlineEditor } from '../components/inline-editor.js';
@@ -251,8 +250,6 @@ export function SequenceCanvas(props: SequenceCanvasProps) {
   const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
-  const [connectionMode] = useState<ConnectionMode>('direction');
-  const [localDirection] = useState<FlowchartDirection>('TB');
 
   // B4.3：右键菜单状态（null 表示菜单关闭；target=undefined 表示空白处右键）
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -1667,22 +1664,6 @@ export function SequenceCanvas(props: SequenceCanvasProps) {
 
   return (
     <div className="app-container">
-      <Toolbar
-        diagramType="sequenceDiagram"
-        direction={localDirection}
-        mermaidCode={mermaidCode}
-        connectionMode={connectionMode}
-        onConnectionModeChange={() => {
-          // 时序图不支持连线模式切换
-        }}
-        onDiagramTypeChange={onDiagramTypeChange as (newType: DiagramType) => void}
-        onDirectionChange={() => {
-          // 时序图不支持方向切换
-        }}
-        darkMode={props.darkMode}
-        onDarkModeToggle={props.onDarkModeToggle}
-      />
-
       <div className="main-content">
         <div className="left-panel">
           <NodeLibrary diagramType="sequenceDiagram" onAddNode={handleAddParticipant} />
@@ -2125,6 +2106,7 @@ export function SequenceCanvas(props: SequenceCanvasProps) {
             onCodeChange={handleCodeChange}
             error={codeError}
             diagramType="sequenceDiagram"
+            onDiagramTypeChange={onDiagramTypeChange as ((newType: DiagramType) => void) | undefined}
           />
           {/* 属性面板：根据选中类型显示不同编辑器 */}
           <div className="property-panel">

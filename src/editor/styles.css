@@ -51,7 +51,6 @@
   --text-xl: 18px;
 
   /* === 布局 === */
-  --toolbar-height: 40px;
   --tabbar-height: 36px;
   --left-panel-width: 220px;
   --right-panel-width: 280px;
@@ -259,100 +258,31 @@ html, body, #root {
   min-height: 0;
 }
 
-/* 工具栏 */
-.toolbar {
+/* 代码区控件行（图表类型 / 流程图方向 / 连线模式选择器） */
+.code-editor-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-6);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-bg-muted);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--color-border);
-  height: var(--toolbar-height);
+  background: var(--color-bg-muted);
   flex-shrink: 0;
 }
 
-.toolbar-section {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.toolbar-label {
-  font-size: var(--text-base);
-  color: var(--color-text-secondary);
-}
-
-.toolbar-select {
-  padding: var(--space-2) var(--space-3);
+.code-editor-select {
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   background: var(--color-bg);
   color: var(--color-text);
 }
 
-.toolbar-select:focus {
+.code-editor-select:focus {
   border-color: var(--color-primary);
   outline: none;
   box-shadow: var(--focus-ring);
-}
-
-.toolbar-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--color-text);
-  flex: 1;
-  text-align: center;
-}
-
-.toolbar-logo {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: -0.5px;
-  user-select: none;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
-  flex-shrink: 0;
-}
-
-.toolbar-actions {
-  margin-left: auto;
-}
-
-/* Vercel ghost 风格按钮 */
-.toolbar-btn {
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--color-text);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-
-.toolbar-btn:hover {
-  background: var(--color-bg-muted);
-  color: var(--color-text);
-}
-
-/* 图表类型徽章 */
-.diagram-type-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-info);
-  background: var(--color-bg-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  line-height: 1.4;
-  user-select: none;
 }
 
 /* 主内容区 */
@@ -413,14 +343,24 @@ html, body, #root {
   justify-content: space-between;
 }
 
-.code-editor-type-badge {
-  font-size: var(--text-xs);
-  color: var(--color-info);
+/* 复制代码按钮（标题栏右侧） */
+.code-editor-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.code-editor-copy:hover {
   background: var(--color-bg-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 1px var(--space-2);
-  line-height: 1.4;
+  color: var(--color-text);
 }
 
 .code-editor-content {

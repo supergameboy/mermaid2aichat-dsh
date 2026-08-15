@@ -28,7 +28,7 @@ export function MermaidLauncher({ wide = true, useMermaid, mermaidActions, useBl
       type="button"
       className={css.launcher}
       data-active={open || undefined}
-      title={open ? '关闭 Mermaid 反向编辑器' : '打开 Mermaid 反向编辑器'}
+      title={open ? '关闭 mermaid2aichat-dsh' : '打开 mermaid2aichat-dsh'}
       onClick={() => { mermaidActions.toggleOpen() }}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

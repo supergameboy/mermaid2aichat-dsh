@@ -50,8 +50,8 @@ const PLACEHOLDER_VIEW: MermaidView = {
 }
 const PLACEHOLDER_SESSION: MermaidSessionViews = { views: [PLACEHOLDER_VIEW], activeViewId: 'default' }
 
-/** 紧凑模式自动生效的宽度阈值。 */
-const COMPACT_WIDTH = 480
+/** 紧凑模式自动生效的宽度阈值（默认列宽 480 时面板实测 479，阈值须低于它）。 */
+const COMPACT_WIDTH = 420
 
 interface MermaidPanelProps {
   /** 面板状态选择器 hook（apply 注入的 hooks 仓）。 */
@@ -249,11 +249,8 @@ export function MermaidPanel({
       data-compact={effectiveCompact || undefined}
     >
       <header className={css.header}>
-        <span className={css.logo} title="Mermaid 反向编辑器">M2A</span>
-        <span className={css.title}>Mermaid 反向编辑器</span>
-        <span className={css.badge}>
-          {DIAGRAM_TYPE_LABELS[activeView.canvas.diagramType] ?? activeView.canvas.diagramType}
-        </span>
+        <span className={css.logo} title="mermaid2aichat-dsh">M2A</span>
+        <span className={css.title}>mermaid2aichat-dsh</span>
         <div className={css.spacer} />
         {blocks.length > 0 && (
           <div className={css.importWrap}>
@@ -290,6 +287,18 @@ export function MermaidPanel({
             )}
           </div>
         )}
+        <button
+          type="button"
+          className={css.iconBtn}
+          onClick={() => { mermaidActions.setDarkMode(!darkMode) }}
+          title={darkMode ? '切换到亮色模式' : '切换到暗色模式'}
+        >
+          {darkMode ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          )}
+        </button>
         <button
           type="button"
           className={css.actionGhost}
@@ -348,8 +357,6 @@ export function MermaidPanel({
           onDirectionChange={() => { /* 方向由画布内部管理 */ }}
           onViewportChange={handleViewportChange}
           onDiagramTypeChange={(t) => { setPendingSwitch(t) }}
-          darkMode={darkMode}
-          onDarkModeToggle={() => { mermaidActions.setDarkMode(!darkMode) }}
         />
         {pendingSwitch !== null && (
           <TypeSwitchDialog

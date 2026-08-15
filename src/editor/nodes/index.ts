@@ -15,7 +15,7 @@ import type { ConnectionMode } from './flowchart/index.js';
 import { classNodeTypes } from './class/index.js';
 import { erNodeTypes } from './er/index.js';
 
-// 导出 Context（供 graph-canvas、toolbar、sequence-canvas、specialized-shell 使用）
+// 导出 Context（供 graph-canvas、sequence-canvas、specialized-shell 使用）
 export { DirectionContext, ConnectionModeContext } from './flowchart/index.js';
 export type { ConnectionMode } from './flowchart/index.js';
 

@@ -75,7 +75,6 @@ import {
 import { computeClassBoxSize } from './nodes/class/class-box-size.js';
 // M4 修订：er-box 同样需要动态尺寸估算（attributes/alias 影响高度）
 import { computeErBoxSize } from './nodes/er/er-box-size.js';
-import { Toolbar } from './components/toolbar.js';
 import { NodeLibrary } from './components/node-library.js';
 import { getTemplate, getTemplatesForDiagramType } from './components/node-templates.js';
 import { PropertyPanel } from './components/property-panel.js';
@@ -367,6 +366,26 @@ function GraphCanvasInner(props: GraphCanvasProps) {
   // ============================================================
   // 统一画布渲染管线
   // ============================================================
+
+  /** 流程图方向切换：同步 metadata 并重布局（原 Toolbar 的 onDirectionChange 逻辑）。 */
+  const handleDirectionChange = useCallback((dir: FlowchartDirection) => {
+    setLocalDirection(dir);
+    directionRef.current = dir;
+    // 同步更新 metadata.direction，消除方向双源（canvas.direction vs canvas.metadata.direction）
+    // 不同步会导致 round-trip 时 registry.ts 用 stale metadata.direction 覆盖 canvas.direction
+    // applyCanvasChange 内部会同步写入 metadataRef.current + setMetadata + 传入 buildCanvasState
+    const newMetadata: GraphMetadata = { ...metadataRef.current, direction: dir };
+    onDirectionChange(dir);
+    applyCanvasChange({
+      nodes: nodesRef.current,
+      edges: edgesRef.current,
+      metadata: newMetadata,
+      recalculate: { layout: true },
+    });
+    setTimeout(() => {
+      nodesRef.current.forEach((node) => updateNodeInternals(node.id));
+    }, 0);
+  }, [onDirectionChange, applyCanvasChange, updateNodeInternals, setLocalDirection]);
 
   // syncCanvas ref：用于 needsLayout 检查，但不作为 effect 依赖
   // 避免方向等字段变化时误触 syncNodes/syncEdges effect 覆盖布局结果
@@ -1046,35 +1065,6 @@ function GraphCanvasInner(props: GraphCanvasProps) {
 
   return (
     <div className="app-container">
-      <Toolbar
-        diagramType={diagramType}
-        direction={localDirection}
-        mermaidCode={mermaidCode}
-        connectionMode={connectionMode}
-        onConnectionModeChange={handleConnectionModeChange}
-        onDiagramTypeChange={onDiagramTypeChange}
-        darkMode={props.darkMode}
-        onDarkModeToggle={props.onDarkModeToggle}
-        onDirectionChange={(dir) => {
-          setLocalDirection(dir);
-          directionRef.current = dir;
-          // 同步更新 metadata.direction，消除方向双源（canvas.direction vs canvas.metadata.direction）
-          // 不同步会导致 round-trip 时 registry.ts 用 stale metadata.direction 覆盖 canvas.direction
-          // applyCanvasChange 内部会同步写入 metadataRef.current + setMetadata + 传入 buildCanvasState
-          const newMetadata: GraphMetadata = { ...metadataRef.current, direction: dir };
-          onDirectionChange(dir);
-          applyCanvasChange({
-            nodes: nodesRef.current,
-            edges: edgesRef.current,
-            metadata: newMetadata,
-            recalculate: { layout: true },
-          });
-          setTimeout(() => {
-            nodesRef.current.forEach((node) => updateNodeInternals(node.id));
-          }, 0);
-        }}
-      />
-
       <div className="main-content">
         <div
           className={`left-panel ${leftCollapsed ? 'collapsed' : ''}`}
@@ -1337,6 +1327,11 @@ function GraphCanvasInner(props: GraphCanvasProps) {
             onCodeChange={handleCodeChange}
             error={codeError}
             diagramType={diagramType}
+            onDiagramTypeChange={onDiagramTypeChange}
+            direction={localDirection}
+            onDirectionChange={handleDirectionChange}
+            connectionMode={connectionMode}
+            onConnectionModeChange={handleConnectionModeChange}
           />
           <PropertyPanel
             diagramType={diagramType}
