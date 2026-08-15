@@ -78,6 +78,10 @@ export function apply(ctx: Context): void {
         // 聊天区让位：编辑器打开时占用右侧 details 列（聊天自动缩宽）
         layoutOpen: () => { ctx.layout.openDetails() },
         layoutClose: () => { ctx.layout.closeDetails() },
+        // 可调宽度：宿主布局服务开放 setDetails 时接管拖拽，否则降级为穿透原生把手
+        layoutSetDetails: typeof ctx.layout.setDetails === 'function'
+          ? (px: number) => { ctx.layout.setDetails?.(px) }
+          : undefined,
         sendToChat: async (code: string, sessionId: string): Promise<void> => {
           // 直接走 SessionFace.prompt（ConversationController.send 的内部路径），
           // 避免 scope 寻址属性代理在 scope fiber 上抛 inject 守卫错误。

@@ -69,6 +69,8 @@ export interface MermaidPanelProps {
   layoutOpen: () => void
   /** 关闭右侧 details 列。 */
   layoutClose: () => void
+  /** 设置 details 列宽度（宿主开放时可用；undefined 时把手降级为穿透模式）。 */
+  layoutSetDetails?: (px: number) => void
 }
 
 export function MermaidPanel({
@@ -80,10 +82,12 @@ export function MermaidPanel({
   rescanBlocks,
   layoutOpen,
   layoutClose,
+  layoutSetDetails,
 }: MermaidPanelProps) {
   const open = useMermaid((s) => s.open)
   const maximized = useMermaid((s) => s.maximized)
   const darkMode = useMermaid((s) => s.darkMode)
+  const compact = useMermaid((s) => s.compact)
   const sessions = useMermaid((s) => s.sessions)
   const seenBlockKeys = useMermaid((s) => s.seenBlockKeys)
 
@@ -97,6 +101,30 @@ export function MermaidPanel({
   const [importOpen, setImportOpen] = useState(false)
   // 右侧 details 列的实测宽度（编辑器停靠其上，随列宽同步）
   const [columnWidth, setColumnWidth] = useState<number | null>(null)
+
+  // 自绘宽度把手（宿主开放 setDetails 时）：指针拖拽直接驱动 details 列宽
+  const resizeRef = useRef<{ startX: number; startW: number } | null>(null)
+  const [resizing, setResizing] = useState(false)
+  const handleResizeDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (layoutSetDetails === undefined) return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    resizeRef.current = { startX: e.clientX, startW: columnWidth ?? 360 }
+    setResizing(true)
+  }, [layoutSetDetails, columnWidth])
+  const handleResizeMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const base = resizeRef.current
+    if (base === null || layoutSetDetails === undefined) return
+    layoutSetDetails(Math.round(base.startW - (e.clientX - base.startX)))
+  }, [layoutSetDetails])
+  const handleResizeUp = useCallback(() => {
+    resizeRef.current = null
+    setResizing(false)
+  }, [])
+
+  // 响应式紧凑模式：窄宽度（< 480px）自动隐藏左右侧面板，只显示画布；
+  // 手动开关在宽面板下也可强制紧凑。
+  const effectiveCompact = compact || (columnWidth !== null && columnWidth > 0 && columnWidth < 480)
 
   // 挂载时重扫：应用 UI 稳定后会话 binding 必然可用（补 boot 时序竞态），
   // 让启动前已有的 mermaid_load 调用（仍在消息窗口内）也能被导入。
@@ -270,10 +298,26 @@ export function MermaidPanel({
   const panelWidth = maximized ? '100vw' : `${columnWidth ?? 360}px`
 
   return (
-    <div className={panelClass} data-mermaid-panel style={{ width: panelWidth }}>
-      {/* 调整宽度把手：指针穿透到 DSH details 列的拖拽把手（8px 命中条），
-          拖动即调整编辑器宽度与聊天区让位宽度 */}
-      {!maximized && <div className={css.resizeStrip} aria-hidden="true" />}
+    <div
+      className={panelClass}
+      data-mermaid-panel
+      data-compact={effectiveCompact || undefined}
+      style={{ width: panelWidth }}
+    >
+      {/* 调整宽度把手：宿主开放 setDetails 时自绘拖拽直接驱动列宽；
+          否则指针穿透到 DSH details 列的原生把手 */}
+      {!maximized && (
+        <div
+          className={css.resizeStrip}
+          data-interactive={layoutSetDetails !== undefined || undefined}
+          data-resizing={resizing || undefined}
+          aria-hidden="true"
+          onPointerDown={handleResizeDown}
+          onPointerMove={handleResizeMove}
+          onPointerUp={handleResizeUp}
+          onPointerCancel={handleResizeUp}
+        />
+      )}
       <header className={css.header}>
         <span className={css.logo} title="Mermaid 反向编辑器">M2A</span>
         <span className={css.title}>Mermaid 反向编辑器</span>
@@ -316,6 +360,14 @@ export function MermaidPanel({
             )}
           </div>
         )}
+        <button
+          type="button"
+          className={css.actionGhost}
+          onClick={() => { mermaidActions.setCompact(!compact) }}
+          title={compact ? '展开左右侧面板' : '紧凑模式：隐藏左右侧面板，只显示画布'}
+        >
+          {compact ? '▤ 展开' : '▥ 紧凑'}
+        </button>
         <button
           type="button"
           className={css.actionGhost}

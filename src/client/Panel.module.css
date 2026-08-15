@@ -24,8 +24,8 @@
   box-shadow: none;
 }
 
-/* 调整宽度把手：指针穿透（pointer-events:none）到 DSH details 列的拖拽把手，
-   仅绘制居中 pill 视觉提示 */
+/* 调整宽度把手：宿主未开放 setDetails 时指针穿透到 DSH details 列的拖拽把手，
+   仅绘制居中 pill 视觉提示；开放时（data-interactive）自绘拖拽直接驱动列宽 */
 .resizeStrip {
   position: absolute;
   top: 0;
@@ -35,6 +35,11 @@
   z-index: 70;
   pointer-events: none;
   cursor: col-resize;
+}
+
+.resizeStrip[data-interactive] {
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .resizeStrip::after {
@@ -57,6 +62,12 @@
 .panel:hover .resizeStrip::after {
   opacity: 1;
   background: var(--dsw-alias-button-floating-hover, #f2f3f5);
+}
+
+/* 响应式紧凑模式：窄宽度下隐藏编辑器左右侧面板，只显示画布 */
+.panel[data-compact] :global(.left-panel),
+.panel[data-compact] :global(.right-panel) {
+  display: none;
 }
 
 .header {

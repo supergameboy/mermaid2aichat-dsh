@@ -40,6 +40,8 @@ export interface MermaidAppState {
   open: boolean
   maximized: boolean
   darkMode: boolean
+  /** 紧凑模式（手动开关；窄宽度下自动生效）。 */
+  compact: boolean
   /** 按会话 id 隔离的标签页。 */
   sessions: Record<string, MermaidSessionViews>
   seenBlockKeys: string[]
@@ -66,6 +68,7 @@ function freshState(): MermaidAppState {
     open: false,
     maximized: false,
     darkMode: false,
+    compact: false,
     sessions: {},
     seenBlockKeys: [],
   }
@@ -81,6 +84,7 @@ function hydrate(): MermaidAppState {
     if (typeof parsed.open === 'boolean') base.open = parsed.open
     if (typeof parsed.maximized === 'boolean') base.maximized = parsed.maximized
     if (typeof parsed.darkMode === 'boolean') base.darkMode = parsed.darkMode
+    if (typeof parsed.compact === 'boolean') base.compact = parsed.compact
     if (parsed.sessions !== null && typeof parsed.sessions === 'object' && !Array.isArray(parsed.sessions)) {
       base.sessions = parsed.sessions as Record<string, MermaidSessionViews>
     }
@@ -97,6 +101,7 @@ export interface MermaidActions {
   setOpen(open: boolean): void
   setMaximized(maximized: boolean): void
   setDarkMode(dark: boolean): void
+  setCompact(compact: boolean): void
   /** 在指定会话新建标签并切换为活动（init 缺省为空白 flowchart 视图）。 */
   addView(sessionId: string, init?: MermaidViewInit): void
   closeView(sessionId: string, id: string): void
@@ -171,6 +176,7 @@ export function createMermaidState(): {
     setOpen: (open) => { commit({ ...state, open }) },
     setMaximized: (maximized) => { commit({ ...state, maximized }) },
     setDarkMode: (darkMode) => { commit({ ...state, darkMode }) },
+    setCompact: (compact) => { commit({ ...state, compact }) },
     addView: (sessionId, init) => {
       commit(updateSession(state, sessionId, (session) => {
         const view: MermaidView = {

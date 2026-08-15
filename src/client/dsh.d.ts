@@ -28,6 +28,8 @@ interface DshLayout {
   openDetails(): void
   /** 关闭右侧 details 列。 */
   closeDetails(): void
+  /** 设置 details 列宽度（部分版本未开放，缺失时插件降级为固定宽度）。 */
+  setDetails?(px: number): void
 }
 
 /** 输入触发源注册面的最小契约。 */
