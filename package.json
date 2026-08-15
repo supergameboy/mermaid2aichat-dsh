@@ -1,7 +1,7 @@
 {
   "name": "mermaid2aichat-dsh",
   "version": "0.1.0",
-  "description": "Mermaid 反向编辑器 — DeepSeek Harness 浏览器插件：在 Web 前端右侧提供可关闭的编辑器面板，支持 flowchart / sequenceDiagram / classDiagram / erDiagram 四种图表类型的可视化编辑与 Mermaid 代码双向同步",
+  "description": "mermaid2aichat-dsh — Mermaid 可视化编辑器，DeepSeek Harness 浏览器插件：右侧可关闭面板 + 画布/Mermaid 代码双向同步 + Agent 工具通道（flowchart / sequenceDiagram / classDiagram / erDiagram）",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -9,6 +9,14 @@
     "./client": "./lib/client.js",
     "./package.json": "./package.json"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supergameboy/mermaid2aichat-dsh.git"
+  },
+  "bugs": {
+    "url": "https://github.com/supergameboy/mermaid2aichat-dsh/issues"
+  },
+  "homepage": "https://github.com/supergameboy/mermaid2aichat-dsh#readme",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
