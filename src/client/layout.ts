@@ -93,6 +93,8 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
   let frameWidth = 0
   /** 拖拽期间的本地宽度（实时布栅格；松手才写回 store）。 */
   let dragWidth: number | null = null
+  /** 拖拽期间已把帧的行内 transition 改为 none（结束/重渲染后恢复）。 */
+  let transitionKilled = false
 
   const currentWidth = (): number => dragWidth ?? options.getState().width
 
@@ -109,6 +111,16 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
     if (frame === null || column === null || shellTracks.length !== 3) return
     const state = options.getState()
     const width = state.open && !state.maximized ? clampWidth(currentWidth()) : 0
+    // 拖拽期间关掉 shell 网格自带的 grid-template-columns 过渡动画
+    // （.frame 样式表规则会对每帧写入做缓动，导致列跟不上把手）；
+    // 打开/关闭仍保留动画，只有拖拽是逐帧直写。
+    if (dragWidth !== null && !transitionKilled) {
+      frame.style.transition = 'none'
+      transitionKilled = true
+    } else if (dragWidth === null && transitionKilled) {
+      frame.style.transition = ''
+      transitionKilled = false
+    }
     lastOwn = `${shellTracks[0]} ${shellTracks[1]} ${shellTracks[2]} ${width}px`
     frame.style.gridTemplateColumns = lastOwn
     column.style.visibility = width > 0 ? 'visible' : 'hidden'
@@ -193,6 +205,8 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
       event.preventDefault()
       handle?.setPointerCapture(event.pointerId)
       dragWidth = options.getState().width
+      // 按下即关过渡：首次移动的写入也不做缓动，列严格跟随指针。
+      applyGrid()
       const startX = event.clientX
       const startW = dragWidth
       const onMove = (ev: PointerEvent): void => {
@@ -270,6 +284,9 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
       waitObserver?.disconnect()
       styleObserver?.disconnect()
       sizeObserver?.disconnect()
+      if (frame !== null && transitionKilled) frame.style.transition = ''
+      transitionKilled = false
+      dragWidth = null
       column?.remove()
       handle?.remove()
       frame = null
