@@ -130,6 +130,10 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
   let dragWidth: number | null = null
   /** 拖拽期间已把帧的行内 transition 改为 none（结束/重渲染后恢复）。 */
   let transitionKilled = false
+  /** 上一次布局状态里的全屏标记（全屏进出瞬时切换检测）。 */
+  let prevMaximized: boolean | null = null
+  /** 全屏瞬时切换的过渡恢复定时器。 */
+  let instantTimer: ReturnType<typeof setTimeout> | undefined
   /** 同一轮观察器级联内的写入计数（防循环护栏，超限停写并留诊断）。 */
   let writeBurst = 0
   let burstResetTimer: ReturnType<typeof setTimeout> | undefined
@@ -212,6 +216,19 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
     const state = options.getState()
     const open = state.open && !state.maximized
     const myWidth = open ? clampWidth(currentWidth()) : 0
+
+    // 全屏进出为瞬时切换：0↔W 的列宽变化不做拉伸动画（点还原时不会有
+    // 从右到左的展开效果），单帧禁用过渡后立即恢复。
+    const maximizedChanged = prevMaximized !== null && prevMaximized !== state.maximized
+    prevMaximized = state.maximized
+    if (maximizedChanged) {
+      frame.style.transition = 'none'
+      if (instantTimer !== undefined) clearTimeout(instantTimer)
+      instantTimer = setTimeout(() => {
+        instantTimer = undefined
+        if (frame !== null && dragWidth === null) frame.style.transition = ''
+      }, 0)
+    }
 
     if (foreignCols.length > 0) {
       // 共存：6 轨 = shell 3 轨 + 编辑器轨 + 对方各轨。
@@ -435,9 +452,12 @@ export function createEditorLayout(options: EditorLayoutOptions): EditorLayoutHa
       styleObserver?.disconnect()
       sizeObserver?.disconnect()
       frameChildObserver?.disconnect()
+      if (instantTimer !== undefined) clearTimeout(instantTimer)
+      instantTimer = undefined
       if (frame !== null && transitionKilled) frame.style.transition = ''
       transitionKilled = false
       dragWidth = null
+      prevMaximized = null
       column?.remove()
       handle?.remove()
       frame = null
