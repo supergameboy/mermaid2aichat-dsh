@@ -183,6 +183,13 @@ pnpm run watch    # tsdown 监听重建
 - 编辑器列宽持久化只在拖拽、双击复位与窗口尺寸变化时回写；侧边栏/详情列开关
   只影响当次显示宽度，不修改偏好（与 dsh 自身布局偏好语义一致）
 
+## 致谢
+
+布局控制器（镜像 shell 网格、追加自己的轨道、自绘拖拽把手）的方案学习自
+[dsh-web-ui](https://github.com/zhu1090093659/dsh-web-ui) 的
+[aionui-panel](https://github.com/zhu1090093659/dsh-web-ui/tree/main/packages/dsh-aionui-panel) 包，
+感谢作者分享这一思路——本插件的共存协议也围绕它的行为设计，使两个插件能在同一 GUI 中同屏协作。
+
 ## License
 
 [MIT](LICENSE)

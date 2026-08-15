@@ -161,6 +161,10 @@ After changing source, re-run `pnpm run build`; host-side changes (tool registra
 - The `/` input-trigger replaces the draft with the code block (`setDraft` semantics) and cannot append to existing draft text
 - Editor column width persists only on drag-end, double-click reset and window resize; sidebar/details toggles affect the current display width only, never the preference (matches dsh's own layout-preference semantics)
 
+## Acknowledgments
+
+The DOM layout controller (mirroring the shell's grid, appending its own column track, and drawing custom drag handles) is inspired by the [aionui-panel](https://github.com/zhu1090093659/dsh-web-ui/tree/main/packages/dsh-aionui-panel) package in [dsh-web-ui](https://github.com/zhu1090093659/dsh-web-ui). Thanks to its author for sharing the approach — this plugin's coexistence protocol is built around that behavior so both can run side by side in the same GUI.
+
 ## License
 
 [MIT](LICENSE)
