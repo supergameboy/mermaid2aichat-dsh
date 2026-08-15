@@ -13,23 +13,11 @@ declare module '@deepseek-ai/cordis' {
     sessions: DshSessions
     /** 输入触发源注册（ui-input-trigger 提供）。 */
     inputTriggers: DshInputTriggers
-    /** 布局面板动作（ui-layout 提供：打开/关闭右侧 details 列以给编辑器让位）。 */
-    layout: DshLayout
     /** 严格读取可选服务。 */
     get(name: string): unknown
-    /** 注册随 fiber 销毁的副作用。 */
+    /** 注册副作用：fn 立即执行，其返回值为销毁器（随 fiber 清理）。 */
     effect(fn: () => unknown, label?: string): void
   }
-}
-
-/** 布局面板动作的最小契约。 */
-interface DshLayout {
-  /** 打开右侧 details 列（契约默认宽度）。 */
-  openDetails(): void
-  /** 关闭右侧 details 列。 */
-  closeDetails(): void
-  /** 设置 details 列宽度（部分版本未开放，缺失时插件降级为固定宽度）。 */
-  setDetails?(px: number): void
 }
 
 /** 输入触发源注册面的最小契约。 */

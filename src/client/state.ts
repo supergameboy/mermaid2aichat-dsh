@@ -10,6 +10,7 @@
  */
 import { createEmptyCanvasState } from '@mermaid2aichat/serializer'
 import type { CanvasState, Viewport } from '@mermaid2aichat/serializer'
+import { DEFAULT_W } from './layout'
 
 /** 一个标签页（本地视图）。 */
 export interface MermaidView {
@@ -42,6 +43,8 @@ export interface MermaidAppState {
   darkMode: boolean
   /** 紧凑模式（手动开关；窄宽度下自动生效）。 */
   compact: boolean
+  /** 编辑器列宽度（px；由布局控制器钳制）。 */
+  width: number
   /** 按会话 id 隔离的标签页。 */
   sessions: Record<string, MermaidSessionViews>
   seenBlockKeys: string[]
@@ -69,6 +72,7 @@ function freshState(): MermaidAppState {
     maximized: false,
     darkMode: false,
     compact: false,
+    width: DEFAULT_W,
     sessions: {},
     seenBlockKeys: [],
   }
@@ -85,6 +89,7 @@ function hydrate(): MermaidAppState {
     if (typeof parsed.maximized === 'boolean') base.maximized = parsed.maximized
     if (typeof parsed.darkMode === 'boolean') base.darkMode = parsed.darkMode
     if (typeof parsed.compact === 'boolean') base.compact = parsed.compact
+    if (typeof parsed.width === 'number' && Number.isFinite(parsed.width) && parsed.width > 0) base.width = parsed.width
     if (parsed.sessions !== null && typeof parsed.sessions === 'object' && !Array.isArray(parsed.sessions)) {
       base.sessions = parsed.sessions as Record<string, MermaidSessionViews>
     }
@@ -102,6 +107,8 @@ export interface MermaidActions {
   setMaximized(maximized: boolean): void
   setDarkMode(dark: boolean): void
   setCompact(compact: boolean): void
+  /** 设置编辑器列宽度（px；布局控制器会做钳制）。 */
+  setWidth(width: number): void
   /** 在指定会话新建标签并切换为活动（init 缺省为空白 flowchart 视图）。 */
   addView(sessionId: string, init?: MermaidViewInit): void
   closeView(sessionId: string, id: string): void
@@ -177,6 +184,7 @@ export function createMermaidState(): {
     setMaximized: (maximized) => { commit({ ...state, maximized }) },
     setDarkMode: (darkMode) => { commit({ ...state, darkMode }) },
     setCompact: (compact) => { commit({ ...state, compact }) },
+    setWidth: (width) => { commit({ ...state, width }) },
     addView: (sessionId, init) => {
       commit(updateSession(state, sessionId, (session) => {
         const view: MermaidView = {

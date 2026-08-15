@@ -1,67 +1,36 @@
+/* 停靠形态（默认）：填满布局控制器追加的网格列 */
 .panel {
   /* 浮层为 click-through，面板自身恢复指针事件 */
   pointer-events: auto;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--dsw-specific-sidebar-fill, #ffffff);
+  font-family: inherit;
+}
+
+/* 浮层形态：固定右侧浮层（列未挂载时的兜底） */
+.floating {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   z-index: 60;
-  display: flex;
-  flex-direction: column;
-  /* 兜底宽度（实际宽度由 details 列同步，见 Panel.tsx 的 inline style） */
   width: 360px;
-  background: var(--dsw-specific-sidebar-fill, #ffffff);
+  height: auto;
   border-left: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
   box-shadow: -12px 0 32px rgba(0, 0, 0, 0.18);
-  font-family: inherit;
 }
 
 /* 页面内全屏：覆盖整个页面（非浏览器全屏） */
 .maximized {
   left: 0;
   width: 100vw;
+  z-index: 2000;
   border-left: none;
   box-shadow: none;
-}
-
-/* 调整宽度把手：宿主未开放 setDetails 时指针穿透到 DSH details 列的拖拽把手，
-   仅绘制居中 pill 视觉提示；开放时（data-interactive）自绘拖拽直接驱动列宽 */
-.resizeStrip {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -4px;
-  width: 8px;
-  z-index: 70;
-  pointer-events: none;
-  cursor: col-resize;
-}
-
-.resizeStrip[data-interactive] {
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.resizeStrip::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
-  height: 32px;
-  border-radius: 10px;
-  box-sizing: border-box;
-  background: var(--dsw-alias-button-floating-fill, #ffffff);
-  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.14));
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
-  opacity: 0.7;
-  transition: opacity var(--ds-transition-duration-slow, 160ms) ease;
-}
-
-.panel:hover .resizeStrip::after {
-  opacity: 1;
-  background: var(--dsw-alias-button-floating-hover, #f2f3f5);
 }
 
 /* 响应式紧凑模式：窄宽度下隐藏编辑器左右侧面板，只显示画布 */
