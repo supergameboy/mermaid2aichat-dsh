@@ -61,6 +61,43 @@ dsh plugin --profile web add <path-to-this-repo>
 
 After installing, **restart `dsh web`** (the `mermaid_load` tool registers at host startup), then refresh the page — the "Mermaid 编辑器" button appears at the bottom of the sidebar.
 
+## Recommended setup: working with archify & dsh-web-ui
+
+### Positioning
+
+The value of mermaid2aichat-dsh is not "one more diagram tool" — it turns diagrams into an **editable loop that feeds the agent**:
+
+```
+AI analyzes / draws ──mermaid_load──▶ editor (editable) ──send to chat──▶ AI continues
+user draws / edits ──editor──▶ Mermaid code ──send to chat──▶ AI analyzes / implements from the diagram
+```
+
+One-shot generators such as [archify](https://github.com/tt-a1i/archify) own the "analysis + polished HTML artifact" end; this plugin owns the "Mermaid workbench + two-way agent feed" end. The two complement each other without overlap.
+
+### Recommended installs
+
+```sh
+# this plugin (npm)
+dsh plugin --profile web add mermaid2aichat-dsh
+
+# dsh-web-ui family (right-side file tree / preview / task board, coexists on the same grid)
+dsh plugin --profile web add @linxin666/dsh-web-ui-all
+
+# archify: an agent skill (Claude Code / npx skills — see its README)
+npx skills add tt-a1i/archify -g
+```
+
+### How to work with them
+
+- Need a diagram you will keep **editing and feed back to the agent** (flowchart / sequenceDiagram / classDiagram / erDiagram)? Ask the agent to call `mermaid_load` into this editor, tweak it, then "发送到对话".
+- Need a **one-shot polished artifact** (architecture / data-flow / lifecycle, for docs / PRs / READMEs)? Ask the agent to generate a self-contained HTML with archify.
+- Both can coexist in the same session: dsh-web-ui's right panels and this plugin's editor column share the shell grid via the coexistence protocol.
+
+### Related projects
+
+- [archify](https://github.com/tt-a1i/archify) — agent skill: natural language to beautiful, self-contained HTML technical diagrams
+- [dsh-web-ui](https://github.com/zhu1090093659/dsh-web-ui) — a family of dsh plugins (right-side file tree / preview, task board, etc.)
+
 ## Working with the agent
 
 Tell the agent:

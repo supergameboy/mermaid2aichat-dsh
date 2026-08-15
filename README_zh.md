@@ -67,6 +67,46 @@ dsh plugin --profile web add <本仓库路径>
 安装后**重启 `dsh web`**（模型工具 `mermaid_load` 在宿主启动时注册），
 刷新页面即可在侧边栏底部看到「Mermaid 编辑器」按钮。
 
+## 推荐安装与配合使用（archify / dsh-web-ui）
+
+### 定位
+
+mermaid2aichat-dsh 的价值不是「多一种画图工具」，而是把图变成**可编辑、可喂给 AI 的循环**：
+
+```
+AI 分析/画图 ──mermaid_load──▶ 编辑器（可改）──发送到对话──▶ AI 继续
+用户画图/改图 ──编辑器──▶ Mermaid 代码 ──发送到对话──▶ AI 基于图分析/实现
+```
+
+一次性图生成器（如 [archify](https://github.com/tt-a1i/archify)）负责「分析 + 精美 HTML 产出」，
+本插件负责「Mermaid 工作台 + 双向喂 AI」，二者侧重不同、互补不冲突。
+
+### 推荐安装
+
+```sh
+# 本插件（npm）
+dsh plugin --profile web add mermaid2aichat-dsh
+
+# dsh-web-ui 全家桶（右侧文件树/预览/任务看板等，与本插件网格共存）
+dsh plugin --profile web add @linxin666/dsh-web-ui-all
+
+# archify：Agent skill（Claude Code / npx skills 安装，见其 README）
+npx skills add tt-a1i/archify -g
+```
+
+### 配合方法
+
+- 需要**可继续编辑、可送回 AI 分析**的图（流程图/时序图/类图/ER 图）→
+  让 Agent 用 `mermaid_load` 送到本编辑器，改完「发送到对话」
+- 需要**一次性精美交付物**（架构/数据流/生命周期图，放文档/PR/README）→
+  让 Agent 用 archify 生成自包含单文件 HTML
+- 两者可共存：dsh-web-ui 的右侧面板与本插件编辑器列按共存协议同屏显示
+
+### 相关项目
+
+- [archify](https://github.com/tt-a1i/archify) — Agent skill：自然语言生成精美自包含 HTML 技术图
+- [dsh-web-ui](https://github.com/zhu1090093659/dsh-web-ui) — dsh 插件全家桶（右侧文件树/预览、任务看板等）
+
 ## 与 Agent 协作示例
 
 在对话中对 Agent 说：
